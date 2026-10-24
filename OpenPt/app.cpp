@@ -6,6 +6,7 @@ namespace openpt {
   void App::run() {
     create_window();
     init_opengl();
+    setup_renderer();
     loop();
   }
 
@@ -19,11 +20,17 @@ namespace openpt {
       throw std::runtime_error("GLAD: Failed to initialize.");
     }
 
-    glViewport(0, 0, m_window_height, m_window_width);
+    glViewport(0, 0, m_window_width, m_window_height);
+  }
+
+  auto App::setup_renderer() -> void {
+    m_renderer.setup();
   }
 
   void App::loop() noexcept {
     while (!glfwWindowShouldClose(m_window.get())) {
+      m_renderer.display_render();
+
       glfwSwapBuffers(m_window.get());
       glfwPollEvents();
     }
