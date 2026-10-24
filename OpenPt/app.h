@@ -7,7 +7,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <exception>
+#include <stdexcept>
 #include <print>
 
 namespace openpt {
@@ -21,6 +21,7 @@ namespace openpt {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };
+      // TODO: setup GLFW error callback.
     }
 
     ~App() {
