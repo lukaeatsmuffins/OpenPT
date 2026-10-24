@@ -1,12 +1,18 @@
+#include <renderer.h>
+
 #include <glad/glad.h>
-#include <glfw/glfw3.h>
 
 #include <stdexcept>
 #include <format>
 
-#include <renderer.h>
-
 namespace openpt {
+
+  Renderer::~Renderer() {
+    glDeleteProgram(m_program);
+    glDeleteBuffers(1, &m_VBO);
+    glDeleteVertexArrays(1, &m_VAO);
+  }
+
   auto Renderer::setup() -> void {
       setup_display_buffers();
       setup_display_shader();
@@ -27,15 +33,13 @@ namespace openpt {
     glEnableVertexArrayAttrib(m_VAO, attrib);
   }
 
-  auto Renderer::display_render() noexcept -> void const {
+  auto Renderer::display_render() const noexcept -> void {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindVertexArray(m_VAO);
     glUseProgram(m_program);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glBindVertexArray(0);
   }
 
   auto Renderer::setup_display_shader() -> void {

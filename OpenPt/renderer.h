@@ -1,13 +1,20 @@
 #ifndef RENDERER_H
 #define RENDERER_H
-#include <string>
+
+#include <cstdint>
 
 namespace openpt {
   class Renderer {
   public:
     Renderer() : m_VAO(0), m_VBO(0), m_program(0) {}
+
+    Renderer(const Renderer& const) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+
+    ~Renderer();
+
     // displays the rendered image on a rectangle.
-    auto display_render() noexcept -> void const;
+    auto display_render() const noexcept -> void;
 
     auto setup() -> void;
 

@@ -3,6 +3,15 @@
 #include <app.h>
 
 namespace openpt {
+
+  namespace {
+    auto APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id,
+                                    GLenum severity, GLsizei length,
+                                    const GLchar* message, const void* user_param) noexcept -> void {
+        std::println(stderr, "GL: {}", message);
+    }
+  } // namespace
+
   void App::run() {
     create_window();
     init_opengl();
@@ -19,7 +28,9 @@ namespace openpt {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
       throw std::runtime_error("GLAD: Failed to initialize.");
     }
-
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(gl_debug_callback, nullptr);
     glViewport(0, 0, m_window_width, m_window_height);
   }
 
@@ -35,5 +46,4 @@ namespace openpt {
       glfwPollEvents();
     }
   }
-
 } // openpt

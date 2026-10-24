@@ -10,7 +10,7 @@ int main()
     openpt::App app{ 800, 600, "OpenPT" };
     app.run();
   }
-  catch (std::exception e) {
+  catch (const std::exception& e) {
     std::println("APP Error: {}", e.what());
     return EXIT_FAILURE;
   }

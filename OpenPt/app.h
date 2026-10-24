@@ -1,11 +1,14 @@
 #ifndef APP_H
 #define APP_H
 
+#include <window.h>
+#include <renderer.h>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <window.h>
-#include <renderer.h>
+#include <exception>
+#include <print>
 
 namespace openpt {
 	class App {
@@ -15,10 +18,14 @@ namespace openpt {
       m_window_width(window_width),
       m_window_height(window_height),
       m_window_title(app_title) {
-      glfwInit();
+      if (!glfwInit()) {
+        throw std::runtime_error("APP: Failed to initialize GLFW");
+      };
     }
 
     ~App() {
+      // TODO: this is not going to work due to lifetimes.
+      // fix this later.
       glfwTerminate();
     }
 
