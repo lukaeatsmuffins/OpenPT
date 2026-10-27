@@ -9,15 +9,17 @@
 
 #include <stdexcept>
 #include <print>
+#include <memory>
 
 namespace openpt {
 	class App {
-
   public: 
+
     App(int window_width, int window_height, const char* app_title):
       m_window_width(window_width),
       m_window_height(window_height),
-      m_window_title(app_title) {
+      m_window_title(app_title),
+      m_renderer(*this) {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };
@@ -32,9 +34,12 @@ namespace openpt {
 
     void run();
 
+    auto window_width() const -> int;
+    auto window_height() const -> int;
+
   private:
-    int m_window_height{};
     int m_window_width{};
+    int m_window_height{};
     const char* m_window_title{};
 
     glfw::Window m_window{};

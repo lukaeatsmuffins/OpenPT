@@ -46,4 +46,11 @@ namespace openpt {
       glfwPollEvents();
     }
   }
+
+  auto App::window_width() const -> int {
+    return m_window_width;
+  }
+  auto App::window_height() const -> int {
+    return m_window_height;
+  }
 } // openpt
