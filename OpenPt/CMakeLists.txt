@@ -13,5 +13,7 @@ include_directories(.)
 
 target_link_libraries(OpenPt PRIVATE glfw glad glm)
 
+target_compile_definitions(OpenPt PRIVATE SHADER_DIR="${CMAKE_CURRENT_SOURCE_DIR}/")
+
 file(GLOB OPENPT_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 target_sources(OpenPt PRIVATE ${OPENPT_SOURCES})

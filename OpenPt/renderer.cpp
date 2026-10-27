@@ -1,5 +1,6 @@
 #include <renderer.h>
 #include <app.h>
+#include <shader.h>
 
 #include <glad/glad.h>
 
@@ -14,7 +15,6 @@ namespace openpt {
     glDeleteBuffers(1, &m_VBO);
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteTextures(1, &m_texture);
-    glDeleteFramebuffers(1, &m_FBO);
   }
 
   auto Renderer::setup() -> void {
@@ -38,18 +38,12 @@ namespace openpt {
     glVertexArrayAttribBinding(m_VAO, attrib, slot);
     glEnableVertexArrayAttrib(m_VAO, attrib);
 
-    // create texture for the framebuffer.
+    // create texture for the compute shader.
+    // todo: update texture size on resize.
     glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
     glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_app.window_width(), m_app.window_height());
-    glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);   // how sampling filters
+    glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    // create frame buffer that will contain the texture as color attachment.
-    glCreateFramebuffers(1, &m_FBO);
-    glNamedFramebufferTexture(m_FBO, GL_COLOR_ATTACHMENT0, m_texture, 0 /*level*/);
-    if (glCheckNamedFramebufferStatus(m_FBO, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-      throw std::runtime_error("OPENGL: Unable to create a complete framebuffer");
-    }
 
     constexpr float red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
     glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, red);
@@ -57,12 +51,11 @@ namespace openpt {
 
   auto Renderer::display_render() const noexcept -> void {
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glUseProgram(m_compute_program);
-    glDispatchCompute(std::ceil(m_app.window_width() / 8), std::ceil(m_app.window_height() / 8), 1);
+    glDispatchCompute(std::ceil(m_app.window_width() / 8.0f), std::ceil(m_app.window_height() / 8.0f), 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     glBindVertexArray(m_VAO);
@@ -97,7 +90,8 @@ namespace openpt {
 
   auto Renderer::setup_compute_shader() -> void {
     uint32_t shdr = glCreateShader(GL_COMPUTE_SHADER);
-    const char* src = m_compute_shdr;
+    std::string src_str = shader::read_shader(m_comp_shdr_path);
+    const char* src = src_str.c_str();
     glShaderSource(shdr, 1, &src, NULL);
     glCompileShader(shdr);
     check_shader_creation(shdr);
