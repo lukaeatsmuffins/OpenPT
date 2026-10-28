@@ -37,7 +37,11 @@ namespace openpt {
     m_window_width = window_width;
     m_window_height = window_height;
 
-    // create as new texture.
+    // if window is minimized do not recreate a new texture.
+    if (window_width * window_height == 0) {
+      return;
+    }
+
     glDeleteTextures(1, &m_texture);
     create_texture();
   }
@@ -63,7 +67,7 @@ namespace openpt {
   auto Renderer::display_render() const noexcept -> void {
 
     // nothing to render to, exit.
-    if (m_window_height == 0 || m_window_width == 0) {
+    if (m_window_height * m_window_width == 0) {
       return;
     }
 

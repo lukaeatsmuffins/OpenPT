@@ -1,8 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 #include <glm/glm.hpp>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
 namespace openpt {
   class Camera {
   public:
@@ -11,10 +10,10 @@ namespace openpt {
       m_vfov(vfov),
       m_vpos(glm::vec3{0.0f,0.0f,3.0f}),
       m_direction(glm::vec3{0.0f,0.0f,-1.0f}),
-      m_vup(glm::vec3{0.0f,1.0f,0.0f}) {
-    }
+      m_vup(glm::vec3{0.0f,1.0f,0.0f}),
+      m_delta_time(0),
+      m_last_frame(0) {}
 
-    auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
     auto update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
   private:
@@ -24,7 +23,8 @@ namespace openpt {
     glm::vec3 m_direction;
     glm::vec3 m_vup;
 
-    double delta_time;
+    double m_last_frame;
+    double m_delta_time;
   };
 
   //void processInput(GLFWwindow* window) {

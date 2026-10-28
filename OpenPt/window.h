@@ -15,8 +15,6 @@ namespace openpt::glfw {
 
   [[nodiscard]] Window create_window(int width, int height, const char* title);
 
-  void framebuffer_size_callback(GLFWwindow*, int width, int height) noexcept;
-
 } // openpt::glfw
 
 #endif // !WINDOW_H
