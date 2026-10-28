@@ -8,8 +8,8 @@ layout (std140, binding = 0) uniform Camera {
 	vec3 v;
 	vec3 w;
 
-	double vfov;
-	double aspect_ratio;
+	float vfov;
+	float aspect_ratio;
 } camera;
 
 void main()

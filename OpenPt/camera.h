@@ -7,10 +7,10 @@
 namespace openpt {
   class Camera {
     struct alignas(16) CameraData {
-      glm::vec3 pos;
-      glm::vec3 u;
-      glm::vec3 v;
-      glm::vec3 w;
+      glm::vec4 pos;
+      glm::vec4 u;
+      glm::vec4 v;
+      glm::vec4 w;
 
       double vfov;
       double aspect_ratio;
@@ -20,14 +20,17 @@ namespace openpt {
     Camera(double aspect_ratio, double vfov) :
       m_aspect_ratio(aspect_ratio),
       m_vfov(vfov),
-      m_vpos(glm::vec3{0.0f,0.0f,1.0f}),
-      m_direction(glm::vec3{0.0f,0.0f,-1.0f}),
-      m_vup(glm::vec3{0.0f,1.0f,0.0f}),
+      m_vpos(glm::vec4{0.0f,0.0f,1.0f, 1.0f}),
+      m_direction(glm::vec4{0.0f,0.0f,-1.0f, 0.0f}),
+      m_vup(glm::vec4{0.0f,1.0f,0.0f,0.0f}),
       m_last_frame(0),
       m_delta_time(0) {
-      m_w = glm::normalize(-m_direction);
-      m_u = glm::normalize(glm::cross(m_vup, m_w)); 
-      m_v = cross(m_w, m_u);
+      auto w = glm::normalize(glm::vec3(-m_direction));
+      auto u = glm::normalize(glm::cross(glm::vec3(m_vup), w)); 
+      auto v = glm::cross(w, u);
+      m_w = glm::vec4(w, 0.0f);
+      m_u = glm::vec4(u, 0.0f);
+      m_v = glm::vec4(v, 0.0f);
     }
 
     auto setup() noexcept -> void;
@@ -38,13 +41,13 @@ namespace openpt {
     uint32_t m_UBO;
     double m_aspect_ratio;
     double m_vfov;
-    glm::vec3 m_vpos;
-    glm::vec3 m_direction;
-    glm::vec3 m_vup;
+    glm::vec4 m_vpos;
+    glm::vec4 m_direction;
+    glm::vec4 m_vup;
 
-    glm::vec3 m_u;
-    glm::vec3 m_v;
-    glm::vec3 m_w;
+    glm::vec4 m_u;
+    glm::vec4 m_v;
+    glm::vec4 m_w;
 
     double m_last_frame;
     double m_delta_time;

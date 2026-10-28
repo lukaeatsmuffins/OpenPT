@@ -14,13 +14,13 @@ namespace openpt {
   auto Camera::update_uniforms() noexcept -> void {
 
     struct alignas(16) CameraData {
-      glm::vec3 pos;
-      glm::vec3 u;
-      glm::vec3 v;
-      glm::vec3 w;
+      alignas(16) glm::vec4 pos;
+      alignas(16) glm::vec4 u;
+      alignas(16) glm::vec4 v;
+      alignas(16) glm::vec4 w;
 
-      double vfov;
-      double aspect_ratio;
+      float vfov;
+      float aspect_ratio;
     };
 
     CameraData camera_data{
