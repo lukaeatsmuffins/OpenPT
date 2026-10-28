@@ -19,13 +19,7 @@ namespace openpt::glfw {
       return nullptr;
     }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     return Window(window);
-  }
-
-  void framebuffer_size_callback(GLFWwindow*, int width, int height) noexcept {
-    glViewport(0, 0, width, height);
   }
 
 } // openpt::glfw

@@ -19,7 +19,7 @@ namespace openpt {
     App(int window_width, int window_height, const char* app_title):
       m_window_title(app_title),
       m_renderer(window_width, window_height),
-      m_camera(window_width, window_height, 45.0) {
+      m_camera(window_width/window_height, 45.0) {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };

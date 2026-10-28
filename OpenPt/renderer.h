@@ -1,6 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <glm/glm.hpp>
+
 #include <cstdint>
 #include <memory>
 
@@ -26,6 +28,8 @@ namespace openpt {
 
     auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
+    auto get_window_size() const noexcept -> glm::vec2;
+
     auto setup() -> void;
 
   private:
@@ -34,6 +38,7 @@ namespace openpt {
     auto setup_compute_shader() -> void;
     auto check_shader_creation(uint32_t shdr) const -> void;
     auto check_program_creation(uint32_t program) const -> void;
+    auto create_texture() noexcept -> void;
 
   private:
     uint32_t m_VAO;

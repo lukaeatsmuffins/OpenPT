@@ -6,9 +6,8 @@
 namespace openpt {
   class Camera {
   public:
-    Camera(uint32_t window_width, uint32_t window_height, double vfov) :
-      m_window_width(window_width),
-      m_window_height(window_height),
+    Camera(double aspect_ratio, double vfov) :
+      m_aspect_ratio(aspect_ratio),
       m_vfov(vfov),
       m_vpos(glm::vec3{0.0f,0.0f,3.0f}),
       m_direction(glm::vec3{0.0f,0.0f,-1.0f}),
@@ -16,12 +15,9 @@ namespace openpt {
     }
 
     auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
-
-    auto get_window_size() const noexcept -> glm::vec2;
+    auto update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
   private:
-    uint32_t m_window_width;
-    uint32_t m_window_height;
     double m_aspect_ratio;
     double m_vfov;
     glm::vec3 m_vpos;

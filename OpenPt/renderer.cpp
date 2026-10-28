@@ -23,13 +23,7 @@ namespace openpt {
       setup_compute_shader();
   }
 
-  auto Renderer::update_window (uint32_t window_width, uint32_t window_height) noexcept -> void {
-    m_window_width = window_width;
-    m_window_height = window_height;
-
-    // create as new texture.
-    glDeleteTextures(1, &m_texture);
-
+  auto Renderer::create_texture() noexcept -> void {
     glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
     glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_window_width, m_window_height);
     glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -37,6 +31,15 @@ namespace openpt {
 
     constexpr float red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
     glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, red);
+  }
+
+  auto Renderer::update_window (uint32_t window_width, uint32_t window_height) noexcept -> void {
+    m_window_width = window_width;
+    m_window_height = window_height;
+
+    // create as new texture.
+    glDeleteTextures(1, &m_texture);
+    create_texture();
   }
 
   auto Renderer::setup_display_buffers() -> void {
@@ -54,17 +57,15 @@ namespace openpt {
     glVertexArrayAttribBinding(m_VAO, attrib, slot);
     glEnableVertexArrayAttrib(m_VAO, attrib);
 
-    // create texture for the compute shader.
-    glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
-    glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_window_width, m_window_height);
-    glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    constexpr float red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, red);
+    create_texture();
   }
 
   auto Renderer::display_render() const noexcept -> void {
+
+    // nothing to render to, exit.
+    if (m_window_height == 0 || m_window_width == 0) {
+      return;
+    }
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -144,6 +145,10 @@ namespace openpt {
       throw std::runtime_error(std::format(
         "RENDERER: Shader program linking failed\n{}\n", infolog));
     }
+  }
+
+  auto Renderer::get_window_size() const noexcept -> glm::vec2 {
+    return glm::vec2(m_window_width, m_window_height);
   }
 
 } //openpt

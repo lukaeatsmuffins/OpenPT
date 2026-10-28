@@ -19,7 +19,7 @@ namespace openpt {
 
   auto App::on_framebuffer_resize(uint32_t width, uint32_t height) noexcept -> void {
     m_renderer.update_window(width, height);
-    m_camera.update_window(width, height);
+    m_camera.update_aspect_ratio(width, height);
   }
 
   auto App::run() -> void{
@@ -30,7 +30,7 @@ namespace openpt {
   }
 
   void App::create_window() {
-    glm::vec2 window_size = m_camera.get_window_size();
+    glm::vec2 window_size = m_renderer.get_window_size();
     m_window = glfw::create_window(window_size.x, window_size.y, m_window_title);
     glfwMakeContextCurrent(m_window.get());
   }
@@ -43,7 +43,7 @@ namespace openpt {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(gl_debug_callback, nullptr);
 
-    glm::vec2 window_size = m_camera.get_window_size();
+    glm::vec2 window_size = m_renderer.get_window_size();
     glViewport(0, 0, window_size.x, window_size.y);
     assert(m_window);
     glfwSetWindowUserPointer(m_window.get(), (void*) this);
