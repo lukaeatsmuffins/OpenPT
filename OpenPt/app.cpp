@@ -3,16 +3,26 @@
 #include <app.h>
 
 namespace openpt {
-
   namespace {
     auto APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id,
                                     GLenum severity, GLsizei length,
                                     const GLchar* message, const void* user_param) noexcept -> void {
         std::println(stderr, "GL: {}", message);
     }
+
+    auto framebuffer_resize_cb(GLFWwindow* window, int width, int height) noexcept -> void {
+      glViewport(0, 0, width, height);
+      auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
+      app->on_framebuffer_resize(width, height);
+    }
   } // namespace
 
-  void App::run() {
+  auto App::on_framebuffer_resize(uint32_t width, uint32_t height) noexcept -> void {
+    m_renderer.update_window(width, height);
+    m_camera.update_window(width, height);
+  }
+
+  auto App::run() -> void{
     create_window();
     init_opengl();
     setup_renderer();
@@ -20,7 +30,8 @@ namespace openpt {
   }
 
   void App::create_window() {
-    m_window = glfw::create_window(m_window_width, m_window_height, m_window_title);
+    glm::vec2 window_size = m_camera.get_window_size();
+    m_window = glfw::create_window(window_size.x, window_size.y, m_window_title);
     glfwMakeContextCurrent(m_window.get());
   }
 
@@ -31,7 +42,12 @@ namespace openpt {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(gl_debug_callback, nullptr);
-    glViewport(0, 0, m_window_width, m_window_height);
+
+    glm::vec2 window_size = m_camera.get_window_size();
+    glViewport(0, 0, window_size.x, window_size.y);
+    assert(m_window);
+    glfwSetWindowUserPointer(m_window.get(), (void*) this);
+    glfwSetFramebufferSizeCallback(m_window.get(), framebuffer_resize_cb);
   }
 
   auto App::setup_renderer() -> void {
@@ -45,12 +61,5 @@ namespace openpt {
       glfwSwapBuffers(m_window.get());
       glfwPollEvents();
     }
-  }
-
-  auto App::window_width() const -> int {
-    return m_window_width;
-  }
-  auto App::window_height() const -> int {
-    return m_window_height;
   }
 } // openpt

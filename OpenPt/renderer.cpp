@@ -23,6 +23,22 @@ namespace openpt {
       setup_compute_shader();
   }
 
+  auto Renderer::update_window (uint32_t window_width, uint32_t window_height) noexcept -> void {
+    m_window_width = window_width;
+    m_window_height = window_height;
+
+    // create as new texture.
+    glDeleteTextures(1, &m_texture);
+
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
+    glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_window_width, m_window_height);
+    glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    constexpr float red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+    glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, red);
+  }
+
   auto Renderer::setup_display_buffers() -> void {
     // create a data buffer.
     glCreateBuffers(1, &m_VBO);
@@ -39,9 +55,8 @@ namespace openpt {
     glEnableVertexArrayAttrib(m_VAO, attrib);
 
     // create texture for the compute shader.
-    // todo: update texture size on resize.
     glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
-    glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_app.window_width(), m_app.window_height());
+    glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_window_width, m_window_height);
     glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -55,7 +70,7 @@ namespace openpt {
 
     glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glUseProgram(m_compute_program);
-    glDispatchCompute(std::ceil(m_app.window_width() / 8.0f), std::ceil(m_app.window_height() / 8.0f), 1);
+    glDispatchCompute(std::ceil(m_window_width / 8.0f), std::ceil(m_window_height / 8.0f), 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     glBindVertexArray(m_VAO);

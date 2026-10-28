@@ -9,7 +9,12 @@ namespace openpt {
   class App;
   class Renderer {
   public:
-    Renderer(App& app) : m_VAO(0), m_VBO(0), m_program(0), m_app(app) {}
+    Renderer(uint32_t window_width, uint32_t window_height) :
+      m_VAO(0),
+      m_VBO(0),
+      m_program(0),
+      m_window_width(window_width),
+      m_window_height(window_height) {}
 
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
@@ -18,6 +23,8 @@ namespace openpt {
 
     // displays the rendered image on a rectangle.
     auto display_render() const noexcept -> void;
+
+    auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
     auto setup() -> void;
 
@@ -34,7 +41,8 @@ namespace openpt {
     uint32_t m_texture;
     uint32_t m_program;
     uint32_t m_compute_program;
-    App& m_app;
+    uint32_t m_window_width;
+    uint32_t m_window_height;
     static constexpr float m_display_vertices[] = {
        1.0f,  1.0f, 0.0f,  // top right
        1.0f, -1.0f, 0.0f,  // bottom right
