@@ -47,6 +47,7 @@ namespace openpt {
     auto create_window() -> void;
     auto init_opengl() const -> void;
     auto setup_renderer() -> void;
+    auto setup_camera() -> void;
     auto loop() noexcept -> void;
 	};
 } // openpt

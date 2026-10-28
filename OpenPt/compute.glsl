@@ -2,6 +2,16 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D screen;
 
+layout (std140, binding = 0) uniform Camera {
+	vec3 pos;
+	vec3 u;
+	vec3 v;
+	vec3 w;
+
+	double vfov;
+	double aspect_ratio;
+} camera;
+
 void main()
 {
     vec4 pixel = vec4(0.075, 0.133, 0.173, 1.0);
@@ -12,10 +22,8 @@ void main()
     x *= float(dims.x) / float(dims.y);
     float y = -(float(pixel_coords.y * 2 - dims.y) / dims.y); // transforms to [-1.0, 1.0]
 
-    float fov = radians(90.0);
-    vec3 cam_o = vec3(0.0, 0.0, -tan(fov / 2.0));
     vec3 ray_o = vec3(x, y, 0.0);
-    vec3 ray_d = normalize(ray_o - cam_o);
+    vec3 ray_d = normalize(ray_o - camera.pos);
 
     vec3 sphere_c = vec3(0.0, 0.0, -5.0);
     float sphere_r = 2.0;

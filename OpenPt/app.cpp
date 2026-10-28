@@ -26,6 +26,7 @@ namespace openpt {
     create_window();
     init_opengl();
     setup_renderer();
+    setup_camera();
     loop();
   }
 
@@ -54,8 +55,13 @@ namespace openpt {
     m_renderer.setup();
   }
 
+  auto App::setup_camera() -> void {
+    m_camera.setup();
+  }
+
   void App::loop() noexcept {
     while (!glfwWindowShouldClose(m_window.get())) {
+      m_camera.update_uniforms();
       m_renderer.display_render();
 
       glfwSwapBuffers(m_window.get());
