@@ -3,10 +3,10 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D screen;
 
 layout (std140, binding = 0) uniform Camera {
-	vec3 pos;
-	vec3 u;
-	vec3 v;
-	vec3 w;
+	vec4 pos;
+	vec4 u;
+	vec4 v;
+	vec4 w;
 
 	float vfov;
 	float aspect_ratio;
@@ -23,7 +23,7 @@ void main()
     float y = -(float(pixel_coords.y * 2 - dims.y) / dims.y); // transforms to [-1.0, 1.0]
 
     vec3 ray_o = vec3(x, y, 0.0);
-    vec3 ray_d = normalize(ray_o - camera.pos);
+    vec3 ray_d = normalize(ray_o - camera.pos.xyz);
 
     vec3 sphere_c = vec3(0.0, 0.0, -5.0);
     float sphere_r = 2.0;
