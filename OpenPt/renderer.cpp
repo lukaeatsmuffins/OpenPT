@@ -29,8 +29,8 @@ namespace openpt {
     glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    constexpr float red[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, red);
+    constexpr float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, black);
   }
 
   auto Renderer::update_window (uint32_t window_width, uint32_t window_height) noexcept -> void {

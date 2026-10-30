@@ -20,7 +20,7 @@ namespace openpt {
     Camera(float aspect_ratio, float vfov) :
       m_aspect_ratio(aspect_ratio),
       m_vfov(vfov),
-      m_vpos(0.0f,0.0f,1.0f),
+      m_vpos(0.0f,0.0f,2.5f),
       m_direction(0.0f,0.0f,-1.0f),
       m_vup(0.0f,1.0f,0.0f),
       m_last_frame(0),
@@ -28,6 +28,10 @@ namespace openpt {
       m_w = glm::normalize(-m_direction);
       m_u = glm::normalize(glm::cross(m_vup, m_w)); 
       m_v = glm::cross(m_w, m_u);
+    }
+
+    ~Camera() {
+      glDeleteBuffers(1, &m_UBO);
     }
 
     auto setup() noexcept -> void;

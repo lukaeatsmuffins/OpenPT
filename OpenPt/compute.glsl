@@ -12,32 +12,60 @@ layout (std140, binding = 0) uniform Camera {
 	float aspect_ratio;
 } camera;
 
+#define MAX_MARCHING_STEPS 500
+#define EPSILON 0.001f
+
+float sceneSDF(vec3 p);
+vec3 estimateNormal(vec3 p);
+
 void main()
 {
-    vec4 pixel = vec4(0.075, 0.133, 0.173, 1.0);
-    ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+	float start = 0.0;
+	float end = 10.0;
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 dims = imageSize(screen);
 
-    ivec2 dims = imageSize(screen);
-    float x = -(float(pixel_coords.x * 2 - dims.x) / dims.x); // transforms to [-1.0, 1.0]
-    x *= float(dims.x) / float(dims.y);
-    float y = -(float(pixel_coords.y * 2 - dims.y) / dims.y); // transforms to [-1.0, 1.0]
+	float x = float(pixel_coords.x * 2 - dims.x) / dims.x; // transforms to [-1.0, 1.0]
+	x *= float(dims.x) / float(dims.y); // aspect ratio correction
+	float y = float(pixel_coords.y * 2 - dims.y) / dims.y; // transforms to [-1.0, 1.0]
 
-    vec3 ray_o = vec3(x, y, 0.0);
-    vec3 ray_d = normalize(ray_o - camera.pos.xyz);
+	vec3 ray_o = camera.pos.xyz;
 
-    vec3 sphere_c = vec3(0.0, 0.0, -5.0);
-    float sphere_r = 2.0;
+	float d = 1.0 / tan(radians(camera.vfov) / 2.0);
 
-    vec3 o_c = ray_o - sphere_c;
-    float b = dot(ray_d, o_c);
-    float c = dot(o_c, o_c) - sphere_r * sphere_r;
-    float intersectionState = b * b - c;
-    vec3 intersection = ray_o + ray_d * (-b - sqrt(b * b - c));
+	vec3 local = vec3(x, y, -d);
 
-    if (intersectionState >= 0.0)
-    {
-        pixel = vec4((normalize(intersection - sphere_c) + 1.0) / 2.0, 1.0);
-    }
+	vec3 ray_d = normalize(mat3(camera.u.xyz, camera.v.xyz, camera.w.xyz) * local);
 
-    imageStore(screen, pixel_coords, pixel);
+	float a = 0.5*(ray_d.y + 1.0);
+	vec4 pixel = (1.0-a)*vec4(1.0, 1.0, 1.0, 1.0) + a*vec4(0.5, 0.7, 1.0, 1.0);
+
+	float depth = start;
+	for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
+			float dist = sceneSDF(ray_o + depth * ray_d);
+			if (dist < EPSILON) {
+					pixel = vec4(estimateNormal(ray_o + depth * ray_d), 1.0);
+					pixel = 0.5 * (pixel + 1);
+					break;
+			}
+			depth += dist;
+
+			if (depth >= end) {
+					break;
+			}
+	}
+
+	imageStore(screen, pixel_coords, pixel);
+}
+	
+float sceneSDF(vec3 p) {
+    return min(length(p) - 0.5, length(p-vec3(0,-100.5,0))-100);
+}
+
+vec3 estimateNormal(vec3 p) {
+    return normalize(vec3(
+        sceneSDF(vec3(p.x + EPSILON, p.y, p.z)) - sceneSDF(vec3(p.x - EPSILON, p.y, p.z)),
+        sceneSDF(vec3(p.x, p.y + EPSILON, p.z)) - sceneSDF(vec3(p.x, p.y - EPSILON, p.z)),
+        sceneSDF(vec3(p.x, p.y, p.z  + EPSILON)) - sceneSDF(vec3(p.x, p.y, p.z - EPSILON))
+    ));
 }
