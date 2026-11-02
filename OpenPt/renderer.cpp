@@ -64,13 +64,14 @@ namespace openpt {
     create_texture();
   }
 
-  auto Renderer::display_render() const noexcept -> void {
+  auto Renderer::display_render() noexcept -> void {
 
     // nothing to render to, exit.
     if (m_window_height * m_window_width == 0) {
       return;
     }
 
+    update_counters();
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -85,7 +86,7 @@ namespace openpt {
     glDrawArrays(GL_TRIANGLES, 0, 6);
   }
 
-  auto Renderer::setup_display_shader() -> void {
+  auto Renderer::setup_display_shader() noexcept -> void {
     uint32_t vshdr = glCreateShader(GL_VERTEX_SHADER);
     const char* vshdr_src = m_display_vshdr;
     glShaderSource(vshdr, 1, &vshdr_src, NULL);
@@ -153,6 +154,16 @@ namespace openpt {
 
   auto Renderer::get_window_size() const noexcept -> glm::vec2 {
     return glm::vec2(m_window_width, m_window_height);
+  }
+  
+  auto Renderer::update_counters() noexcept -> void {
+    glProgramUniform1ui(m_compute_program, 0, m_frame_count++);
+    glProgramUniform1ui(m_compute_program, 1, m_sample_count++);
+    glfwSetWindowTitle(glfwGetCurrentContext(), std::format("OpenPT - Frame: {} Sample: {}", m_frame_count, m_sample_count).c_str());
+  }
+
+  auto Renderer::reset_sample_counter() noexcept -> void {
+    m_sample_count = 0;
   }
 
 } //openpt

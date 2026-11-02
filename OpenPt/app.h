@@ -19,7 +19,9 @@ namespace openpt {
     App(int window_width, int window_height, const char* app_title):
       m_window_title(app_title),
       m_renderer(window_width, window_height),
-      m_camera(static_cast<double>(window_width)/static_cast<double>(window_height), 45.0) {
+      m_camera(static_cast<double>(window_width)/static_cast<double>(window_height), 45.0),
+      m_last_frame(0.0f),
+      m_delta_time(0.0f) {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };
@@ -42,6 +44,8 @@ namespace openpt {
     glfw::Window m_window{};
     Renderer m_renderer;
     Camera m_camera;
+    uint32_t m_last_frame;
+    uint32_t m_delta_time;
 
   private:
     auto create_window() -> void;
@@ -49,6 +53,8 @@ namespace openpt {
     auto setup_renderer() -> void;
     auto setup_camera() -> void;
     auto loop() noexcept -> void;
+    auto process_input() noexcept -> void;
+    auto update_time() noexcept -> void;
 	};
 } // openpt
 

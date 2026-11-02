@@ -59,8 +59,57 @@ namespace openpt {
     m_camera.setup();
   }
 
+  auto App::process_input() noexcept -> void {
+    auto window = m_window.get();
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+      glfwSetWindowShouldClose(m_window.get(), true);
+    }
+    
+    glm::vec3 direction{0};
+    bool moved{ false };
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        direction += glm::vec3(0, 0, -1);
+        moved = true;
+    }
+      
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        direction += glm::vec3(0, 0, 1);
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        direction += glm::vec3(-1, 0, 0);
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        direction += glm::vec3(1, 0, 0);
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        direction += glm::vec3(0, 1, 0);
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        direction += glm::vec3(0, -1, 0);
+        moved = true;
+    }
+
+    if (moved) {
+      m_camera.move_camera(m_delta_time, direction);
+      m_renderer.reset_sample_counter();
+    }
+  }
+
+  auto App::update_time() noexcept -> void {
+		float current_frame = glfwGetTime();
+		m_delta_time = current_frame - m_last_frame;
+		m_last_frame = current_frame;  
+  }
+
   void App::loop() noexcept {
     while (!glfwWindowShouldClose(m_window.get())) {
+      update_time();
+      process_input();
+
       m_camera.update_uniforms();
       m_renderer.display_render();
 

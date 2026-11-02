@@ -35,6 +35,7 @@ namespace openpt {
     }
 
     auto setup() noexcept -> void;
+    auto move_camera(float delta_time, glm::vec3 direction) noexcept -> void;
     auto update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void;
     auto update_uniforms() noexcept -> void;
 

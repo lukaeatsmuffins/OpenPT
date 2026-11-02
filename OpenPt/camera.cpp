@@ -7,6 +7,13 @@ namespace openpt {
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_UBO);
   }
 
+
+  auto Camera::move_camera(float delta_time, glm::vec3 direction) noexcept -> void {
+    constexpr float sensitivity = 0.1f;
+    const float camera_speed = sensitivity * delta_time;
+    m_vpos += camera_speed * direction;
+  }
+
   auto Camera::update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void {
     m_aspect_ratio = static_cast<double>(window_width) / static_cast<double>(window_height);
   }

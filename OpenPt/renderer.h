@@ -16,7 +16,9 @@ namespace openpt {
       m_VBO(0),
       m_program(0),
       m_window_width(window_width),
-      m_window_height(window_height) {}
+      m_window_height(window_height),
+      m_frame_count(0),
+      m_sample_count(0) {}
 
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
@@ -24,7 +26,7 @@ namespace openpt {
     ~Renderer();
 
     // displays the rendered image on a rectangle.
-    auto display_render() const noexcept -> void;
+    auto display_render() noexcept -> void;
 
     auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
@@ -32,13 +34,16 @@ namespace openpt {
 
     auto setup() -> void;
 
+    auto reset_sample_counter() noexcept -> void;
+
   private:
-    auto setup_display_shader() -> void;
+    auto setup_display_shader() noexcept -> void;
     auto setup_display_buffers() -> void;
     auto setup_compute_shader() -> void;
     auto check_shader_creation(uint32_t shdr) const -> void;
     auto check_program_creation(uint32_t program) const -> void;
     auto create_texture() noexcept -> void;
+    auto update_counters() noexcept -> void;
 
   private:
     uint32_t m_VAO;
@@ -48,6 +53,8 @@ namespace openpt {
     uint32_t m_compute_program;
     uint32_t m_window_width;
     uint32_t m_window_height;
+    uint32_t m_frame_count;
+    uint32_t m_sample_count;
     static constexpr float m_display_vertices[] = {
        1.0f,  1.0f, 0.0f,  // top right
        1.0f, -1.0f, 0.0f,  // bottom right
@@ -78,7 +85,7 @@ namespace openpt {
       out vec4 FragColor;
 
       void main() {
-        FragColor = texture(tex, v_uv);
+        FragColor = vec4(sqrt(texture(tex, v_uv).rgb), 1.0);
       }
       )";
     static constexpr char m_comp_shdr_path[] = SHADER_DIR "compute.glsl";
