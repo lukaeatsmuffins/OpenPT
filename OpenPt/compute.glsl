@@ -24,6 +24,13 @@ layout(location = 1) uniform uint u_sample_count;
 #define BULB_ITERATIONS 10
 #define BULB_BAILOUT 2.0
 
+#define GLOW_START 0.55
+#define GLOW_END 0.75
+#define GLOW_INTENSITY 6.0
+#define GLOW_COLOR vec3(1.0, 0.55, 0.2)
+
+#define EXPOSURE 1.0
+
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
@@ -114,14 +121,23 @@ SceneSample opUnion(SceneSample a, SceneSample b) {
 	return b;
 }
 
+vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
+	return a + b * cos(6.28318530718 * (c * t + d));
+}
+
 SceneSample scene(vec3 p) {
 	float trap;
-	// the formula's symmetry axis is z, p.xzy makes it point up.
-	SceneSample bulb = SceneSample(
-		sdMandelbulb(p.xzy, trap),
-		Material(vec3(0.5), vec3(0.0)));
 
-	return bulb;
+	float dist = sdMandelbulb(p.xzy, trap);
+	
+	float t = clamp(pow(trap, 2.0), 0.0, 1.0);
+
+	vec3 albedo = 0.8 * palette(t, vec3(0.5, 0.35, 0.2), vec3(0.5, 0.35, 0.2), vec3(1.0), vec3(0.0, 0.05, 0.1));
+
+	float glow = 1.0 - smoothstep(GLOW_START, GLOW_END, trap);
+	vec3 emission = GLOW_COLOR * GLOW_INTENSITY * glow;
+
+	return SceneSample(dist, Material(albedo, emission));
 }
 
 float scene_dist(vec3 p) {
@@ -137,8 +153,7 @@ vec3 estimate_normal(vec3 p) {
 }
 
 vec3 sky(vec3 dir) {
-	float a = 0.5 * (dir.y + 1.0);
-	return mix(vec3(1.0), vec3(0.5, 0.7, 1.0), a);
+	return vec3(0.0);
 }
 
 // ---------------------------------------------------------------------------
