@@ -38,10 +38,10 @@ namespace openpt {
     ~App() {
       // TODO: this is not going to work due to lifetimes.
       // fix this later.
-      glfwTerminate();
       ImGui_ImplOpenGL3_Shutdown();
       ImGui_ImplGlfw_Shutdown();
       ImGui::DestroyContext();
+      glfwTerminate();
     }
 
     void run();
