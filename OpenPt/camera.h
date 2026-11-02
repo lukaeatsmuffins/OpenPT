@@ -20,13 +20,15 @@ namespace openpt {
     Camera(float aspect_ratio, float vfov) :
       m_aspect_ratio(aspect_ratio),
       m_vfov(vfov),
-      m_vpos(0.0f,0.0f,2.5f),
-      m_direction(0.0f,0.0f,-1.0f),
-      m_vup(0.0f,1.0f,0.0f),
+      m_vpos(0.0f, 0.0f, 2.5f),
+      m_direction(0.0f, 0.0f, -1.0f),
+      m_vup(0.0f, 1.0f, 0.0f),
       m_last_frame(0),
-      m_delta_time(0) {
+      m_delta_time(0),
+      m_yaw(-90.0f),
+      m_pitch(0.0f) {
       m_w = glm::normalize(-m_direction);
-      m_u = glm::normalize(glm::cross(m_vup, m_w)); 
+      m_u = glm::normalize(glm::cross(m_vup, m_w));
       m_v = glm::cross(m_w, m_u);
     }
 
@@ -36,8 +38,12 @@ namespace openpt {
 
     auto setup() noexcept -> void;
     auto move_camera(float delta_time, glm::vec3 direction) noexcept -> void;
+    auto rotate_camera(float x_offset, float y_offset) noexcept -> void;
     auto update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void;
     auto update_uniforms() noexcept -> void;
+
+  private:
+    auto update_direction(glm::vec3 direction) noexcept -> void;
 
   private:
     uint32_t m_UBO;
@@ -53,23 +59,11 @@ namespace openpt {
 
     double m_last_frame;
     double m_delta_time;
+
+    float m_yaw;
+    float m_pitch;
   };
 
-  //void processInput(GLFWwindow* window) {
-    //if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    //  glfwSetWindowShouldClose(window, true);
-    //}
-    //const float camera_speed = 2.5f * m_delta_time;
-
-      //if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-      //    cameraPos += cameraSpeed * cameraDirection;
-      //if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-      //    cameraPos -= cameraSpeed * cameraDirection;
-      //if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-      //    cameraPos -= glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
-      //if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-      //    cameraPos += glm::normalize(glm::cross(cameraDirection, cameraUp)) * cameraSpeed;
-  //}
 
 } // openpt
 

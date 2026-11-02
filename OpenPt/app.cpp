@@ -15,6 +15,11 @@ namespace openpt {
       auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
       app->on_framebuffer_resize(width, height);
     }
+
+    auto mouse_event_cb(GLFWwindow* window, double xpos, double ypos) noexcept -> void {
+      auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
+      app->on_mouse_event(xpos, ypos);
+    }
   } // namespace
 
   auto App::on_framebuffer_resize(uint32_t width, uint32_t height) noexcept -> void {
@@ -48,6 +53,8 @@ namespace openpt {
     glViewport(0, 0, window_size.x, window_size.y);
     assert(m_window);
     glfwSetWindowUserPointer(m_window.get(), (void*) this);
+    glfwSetInputMode(m_window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
+    glfwSetCursorPosCallback(m_window.get(), mouse_event_cb);  
     glfwSetFramebufferSizeCallback(m_window.get(), framebuffer_resize_cb);
   }
 
@@ -103,6 +110,28 @@ namespace openpt {
 		float current_frame = glfwGetTime();
 		m_delta_time = current_frame - m_last_frame;
 		m_last_frame = current_frame;  
+  }
+
+  auto App::on_mouse_event(double xpos, double ypos) noexcept -> void {
+
+    if (first_mouse_event) {
+      last_x = xpos;
+      last_y = ypos;
+      first_mouse_event = false;
+    }
+
+    float xoffset = xpos - last_x;
+    // y coordinate is top to bottom.
+    float yoffset = last_y - ypos;
+
+    last_x = xpos;
+    last_y = ypos;
+    
+    bool moved = (xoffset != 0.0f || yoffset != 0.0f);
+    if (moved) {
+      m_camera.rotate_camera(xoffset, yoffset);
+      m_renderer.reset_sample_counter();
+    }
   }
 
   void App::loop() noexcept {
