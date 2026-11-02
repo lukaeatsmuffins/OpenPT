@@ -31,10 +31,12 @@ namespace openpt {
       m_VAO(0),
       m_VBO(0),
       m_program(0),
+      m_compute_program(0),
       m_window_width(window_width),
       m_window_height(window_height),
       m_frame_count(0),
       m_sample_count(0),
+      m_settings_ubo(0),
       m_exposure(1.0f) {
       static_assert(offsetof(RenderSettings, glow_start) == 16);
       static_assert(offsetof(RenderSettings, max_bounces) == 36);
@@ -54,7 +56,6 @@ namespace openpt {
         .bulb_iterations = 10,
         .bulb_bailout   = 2.0f,
       };
-      uint32_t m_settings_ubo{};
     }
 
     Renderer(const Renderer&) = delete;

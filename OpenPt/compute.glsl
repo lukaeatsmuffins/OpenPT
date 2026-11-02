@@ -11,7 +11,7 @@ layout (std140, binding = 0) uniform Camera {
 	float vfov;
 	float aspect_ratio;
 	float aperture;
-	float focal_length;
+	float focus_distance;
 } camera;
 
 layout (std140, binding = 1) uniform Settings {
@@ -246,7 +246,7 @@ void main() {
 	vec3 dir = basis * vec3(x, y, -d);
 
 	// Depth of field: the point this pixel sees on the focus plane...
-	vec3 focus_point = camera.pos.xyz + dir * (camera.focal_length / d);
+	vec3 focus_point = camera.pos.xyz + dir * (camera.focus_distance / d);
 
 	// ...is reached from a random point on the lens instead of the camera center.
 	vec2 lens = camera.aperture * random_in_unit_disk(rng);

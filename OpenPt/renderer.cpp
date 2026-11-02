@@ -15,6 +15,7 @@ namespace openpt {
     glDeleteBuffers(1, &m_VBO);
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteTextures(1, &m_texture);
+    glDeleteBuffers(1, &m_settings_ubo);
   }
 
   auto Renderer::setup() -> void {
@@ -110,7 +111,7 @@ namespace openpt {
     update_counters();
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
     glUseProgram(m_compute_program);
     glNamedBufferSubData(m_settings_ubo, 0, sizeof(RenderSettings), &m_settings);
     glProgramUniform1f(m_program, 0, m_exposure);

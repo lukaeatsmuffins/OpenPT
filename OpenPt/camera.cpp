@@ -53,7 +53,7 @@ namespace openpt {
     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
       changed |= ImGui::SliderFloat("Field of view", &m_vfov, 10.0f, 120.0f, "%.0f deg");
       changed |= ImGui::SliderFloat("Aperture", &m_aperture, 0.0f, 0.2f, "%.3f");
-      changed |= ImGui::SliderFloat("Focal length", &m_focal_length, 0.1f, 10.0f, "%.2f");
+      changed |= ImGui::SliderFloat("Focus distance", &m_focus_distance, 0.1f, 10.0f, "%.2f");
 
       ImGui::Text("Position: %.2f, %.2f, %.2f", m_vpos.x, m_vpos.y, m_vpos.z);
     }
@@ -70,7 +70,7 @@ namespace openpt {
       m_vfov,
       m_aspect_ratio,
       m_aperture,
-      m_focal_length
+      m_focus_distance
     };
 
     glNamedBufferSubData(m_UBO, 0, sizeof(CameraData), &camera_data);

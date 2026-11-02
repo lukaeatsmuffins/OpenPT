@@ -20,6 +20,13 @@ namespace openpt {
       auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
       app->on_mouse_event(xpos, ypos);
     }
+
+    auto key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
+      if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+        auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
+        app->change_gui_mode();
+      }
+    }
   } // namespace
 
   auto App::on_framebuffer_resize(uint32_t width, uint32_t height) noexcept -> void {
@@ -56,6 +63,7 @@ namespace openpt {
     glfwSetWindowUserPointer(m_window.get(), (void*) this);
     glfwSetInputMode(m_window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
     glfwSetCursorPosCallback(m_window.get(), mouse_event_cb);  
+    glfwSetKeyCallback(m_window.get(), key_callback);
     glfwSetFramebufferSizeCallback(m_window.get(), framebuffer_resize_cb);
   }
 
@@ -106,17 +114,17 @@ namespace openpt {
     }
   }
 
+  auto App::change_gui_mode() noexcept -> void {
+    m_imgui_mode_on = !m_imgui_mode_on;
+    auto mode = m_imgui_mode_on ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
+    glfwSetInputMode(m_window.get(), GLFW_CURSOR, mode);  
+  }
+
   auto App::process_input() noexcept -> void {
     auto window = m_window.get();
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
       glfwSetWindowShouldClose(m_window.get(), true);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-      m_imgui_mode_on = !m_imgui_mode_on;
-      auto mode = m_imgui_mode_on ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
-      glfwSetInputMode(m_window.get(), GLFW_CURSOR, mode);  
     }
 
     if (m_imgui_mode_on) {

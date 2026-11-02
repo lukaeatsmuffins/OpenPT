@@ -18,7 +18,7 @@ namespace openpt {
       float vfov;
       float aspect_ratio;
       float aperture;
-      float focal_length;
+      float focus_distance;
     };
 
   public:
@@ -33,7 +33,7 @@ namespace openpt {
       m_yaw(-90.0f),
       m_pitch(0.0f),
       m_aperture(0.1f),
-      m_focal_length(1.0f) {
+      m_focus_distance(1.0f) {
       m_w = glm::normalize(-m_direction);
       m_u = glm::normalize(glm::cross(m_vup, m_w));
       m_v = glm::cross(m_w, m_u);
@@ -72,7 +72,7 @@ namespace openpt {
     float m_pitch;
 
     float m_aperture;
-    float m_focal_length;
+    float m_focus_distance;
   };
 
 

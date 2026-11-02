@@ -50,6 +50,8 @@ namespace openpt {
 
     auto on_mouse_event(double xpos, double ypos) noexcept -> void;
 
+    auto change_gui_mode() noexcept -> void;
+
   private:
     const char* m_window_title{};
 
