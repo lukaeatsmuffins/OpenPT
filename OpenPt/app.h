@@ -7,6 +7,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include <stdexcept>
 #include <print>
@@ -35,6 +38,9 @@ namespace openpt {
       // TODO: this is not going to work due to lifetimes.
       // fix this later.
       glfwTerminate();
+      ImGui_ImplOpenGL3_Shutdown();
+      ImGui_ImplGlfw_Shutdown();
+      ImGui::DestroyContext();
     }
 
     void run();
@@ -58,6 +64,7 @@ namespace openpt {
   private:
     auto create_window() -> void;
     auto init_opengl() const -> void;
+    auto init_imgui() -> void;
     auto setup_renderer() -> void;
     auto setup_camera() -> void;
     auto loop() noexcept -> void;

@@ -81,7 +81,7 @@ namespace openpt {
       #version 460 core
       layout (binding = 0) uniform sampler2D tex;
 
-      #define EXPOSURE 1.0
+      #define EXPOSURE 4.0
 
       in vec2 v_uv;
       out vec4 FragColor;
@@ -93,7 +93,7 @@ namespace openpt {
 
       void main() {
         vec3 hdr = texture(tex, v_uv).rgb * EXPOSURE;
-        FragColor = vec4(aces(hdr), 1.0);
+        FragColor = vec4(pow(aces(hdr), vec3(1.0 / 2.2)), 1.0);
       }
       )";
     static constexpr char m_comp_shdr_path[] = SHADER_DIR "compute.glsl";

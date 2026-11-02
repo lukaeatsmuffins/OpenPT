@@ -25,11 +25,12 @@ layout(location = 1) uniform uint u_sample_count;
 #define BULB_BAILOUT 2.0
 
 #define GLOW_START 0.55
-#define GLOW_END 0.75
-#define GLOW_INTENSITY 6.0
+#define GLOW_END 0.80
+#define GLOW_INTENSITY 8.0
 #define GLOW_COLOR vec3(1.0, 0.55, 0.2)
 
-#define EXPOSURE 1.0
+#define LENS_RADIUS 0.08
+#define FOCUS_DISTANCE 2.0
 
 // ---------------------------------------------------------------------------
 // Data
@@ -74,6 +75,12 @@ vec3 random_unit_vector(inout uint state) {
 	float a = rand(state) * 6.28318530718;
 	float r = sqrt(1.0 - z * z);
 	return vec3(r * cos(a), r * sin(a), z);
+}
+
+vec2 random_in_unit_disk(inout uint state) {
+	float r = sqrt(rand(state)); // sqrt: otherwise points bunch up in the center
+	float a = rand(state) * 6.28318530718;
+	return r * vec2(cos(a), sin(a));
 }
 
 // ---------------------------------------------------------------------------
@@ -216,19 +223,32 @@ void main() {
 		return;
 	}
 
-	// Different seed for every pixel and every frame.
+	// different seed for every pixel and every frame.
 	uint rng = pcg_hash(uint(pixel_coords.y * dims.x + pixel_coords.x));
 	rng = pcg_hash(rng + u_frame);
 
-	float x = float(pixel_coords.x * 2 - dims.x) / dims.x; // [-1, 1]
-	x *= float(dims.x) / float(dims.y);                    // aspect ratio
-	float y = float(pixel_coords.y * 2 - dims.y) / dims.y; // [-1, 1]
+	// Anti-aliasing: a random point inside the pixel instead of its corner.
+	// Accumulation averages these over frames, so no loop is needed.
+	vec2 jitter = vec2(rand(rng), rand(rng));
+	vec2 pixel = vec2(pixel_coords) + jitter;
+
+	float x = (pixel.x * 2.0 - float(dims.x)) / float(dims.x); // [-1, 1]
+	x *= float(dims.x) / float(dims.y);                          // aspect ratio
+	float y = (pixel.y * 2.0 - float(dims.y)) / float(dims.y); // [-1, 1]
 
 	float d = 1.0 / tan(radians(camera.vfov) / 2.0);
-	vec3 local = vec3(x, y, -d);
+	mat3 basis = mat3(camera.u.xyz, camera.v.xyz, camera.w.xyz);
 
-	vec3 ray_o = camera.pos.xyz;
-	vec3 ray_d = normalize(mat3(camera.u.xyz, camera.v.xyz, camera.w.xyz) * local);
+	// Unnormalized direction through the image plane, which sits at distance d.
+	vec3 dir = basis * vec3(x, y, -d);
+
+	// Depth of field: the point this pixel sees on the focus plane...
+	vec3 focus_point = camera.pos.xyz + dir * (FOCUS_DISTANCE / d);
+
+	// ...is reached from a random point on the lens instead of the camera center.
+	vec2 lens = LENS_RADIUS * random_in_unit_disk(rng);
+	vec3 ray_o = camera.pos.xyz + lens.x * camera.u.xyz + lens.y * camera.v.xyz;
+	vec3 ray_d = normalize(focus_point - ray_o);
 
 	vec3 average = trace(ray_o, ray_d, rng);
 	if (u_sample_count > 0u) {

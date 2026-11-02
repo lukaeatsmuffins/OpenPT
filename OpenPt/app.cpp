@@ -30,6 +30,7 @@ namespace openpt {
   auto App::run() -> void{
     create_window();
     init_opengl();
+    init_imgui();
     setup_renderer();
     setup_camera();
     loop();
@@ -42,6 +43,7 @@ namespace openpt {
   }
 
   void App::init_opengl() const {
+    assert(m_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
       throw std::runtime_error("GLAD: Failed to initialize.");
     }
@@ -51,11 +53,24 @@ namespace openpt {
 
     glm::vec2 window_size = m_renderer.get_window_size();
     glViewport(0, 0, window_size.x, window_size.y);
-    assert(m_window);
     glfwSetWindowUserPointer(m_window.get(), (void*) this);
     glfwSetInputMode(m_window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
     glfwSetCursorPosCallback(m_window.get(), mouse_event_cb);  
     glfwSetFramebufferSizeCallback(m_window.get(), framebuffer_resize_cb);
+  }
+
+  void App::init_imgui() {
+    assert(m_window);
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
+    ImGui_ImplOpenGL3_Init("#version 460");
   }
 
   auto App::setup_renderer() -> void {
@@ -136,11 +151,18 @@ namespace openpt {
 
   void App::loop() noexcept {
     while (!glfwWindowShouldClose(m_window.get())) {
+      ImGui_ImplOpenGL3_NewFrame();
+      ImGui_ImplGlfw_NewFrame();
+      ImGui::NewFrame();
+
       update_time();
       process_input();
 
       m_camera.update_uniforms();
       m_renderer.display_render();
+
+      ImGui::Render();
+      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
       glfwSwapBuffers(m_window.get());
       glfwPollEvents();
