@@ -10,27 +10,27 @@ layout (std140, binding = 0) uniform Camera {
 
 	float vfov;
 	float aspect_ratio;
+	float aperture;
+	float focal_length;
 } camera;
+
+layout (std140, binding = 1) uniform Settings {
+	vec4 glow_color; // rgb used
+	float glow_start;
+	float glow_end;
+	float glow_intensity;
+	float sky_intensity;
+	float max_distance;
+	int max_bounces;
+	int max_steps;
+	float epsilon;
+	float bulb_power;
+	int bulb_iterations;
+	float bulb_bailout;
+} settings;
 
 layout(location = 0) uniform uint u_frame;
 layout(location = 1) uniform uint u_sample_count;
-
-#define MAX_MARCHING_STEPS 500
-#define MAX_DISTANCE 100.0
-#define MAX_BOUNCES 8
-#define EPSILON 0.001
-
-#define BULB_POWER 8.0
-#define BULB_ITERATIONS 10
-#define BULB_BAILOUT 2.0
-
-#define GLOW_START 0.55
-#define GLOW_END 0.80
-#define GLOW_INTENSITY 8.0
-#define GLOW_COLOR vec3(1.0, 0.55, 0.2)
-
-#define LENS_RADIUS 0.08
-#define FOCUS_DISTANCE 2.0
 
 // ---------------------------------------------------------------------------
 // Data
@@ -93,9 +93,9 @@ float sdMandelbulb(vec3 p, out float trap) {
 	float r = length(z);
 	trap = r;
 
-	for (int i = 0; i < BULB_ITERATIONS; ++i) {
+	for (int i = 0; i < settings.bulb_iterations; ++i) {
 		r = length(z);
-		if (r > BULB_BAILOUT) {
+		if (r > settings.bulb_bailout) {
 			break;
 		}
 		trap = min(trap, r);
@@ -104,11 +104,11 @@ float sdMandelbulb(vec3 p, out float trap) {
 		// radius to the power, both angles times the power.
 		float theta = acos(clamp(z.z / r, -1.0, 1.0));
 		float phi = atan(z.y, z.x);
-		dr = BULB_POWER * pow(r, BULB_POWER - 1.0) * dr + 1.0;
+		dr = settings.bulb_power * pow(r, settings.bulb_power - 1.0) * dr + 1.0;
 
-		float zr = pow(r, BULB_POWER);
-		theta *= BULB_POWER;
-		phi *= BULB_POWER;
+		float zr = pow(r, settings.bulb_power);
+		theta *= settings.bulb_power;
+		phi *= settings.bulb_power;
 
 		z = zr * vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)) + p;
 	}
@@ -141,8 +141,8 @@ SceneSample scene(vec3 p) {
 
 	vec3 albedo = 0.8 * palette(t, vec3(0.5, 0.35, 0.2), vec3(0.5, 0.35, 0.2), vec3(1.0), vec3(0.0, 0.05, 0.1));
 
-	float glow = 1.0 - smoothstep(GLOW_START, GLOW_END, trap);
-	vec3 emission = GLOW_COLOR * GLOW_INTENSITY * glow;
+	float glow = 1.0 - smoothstep(settings.glow_start, settings.glow_end, trap);
+	vec3 emission = settings.glow_color.rgb * settings.glow_intensity * glow;
 
 	return SceneSample(dist, Material(albedo, emission));
 }
@@ -152,7 +152,7 @@ float scene_dist(vec3 p) {
 }
 
 vec3 estimate_normal(vec3 p) {
-	const vec2 e = vec2(EPSILON, 0.0);
+	const vec2 e = vec2(settings.epsilon, 0.0);
 	return normalize(vec3(
 		scene_dist(p + e.xyy) - scene_dist(p - e.xyy),
 		scene_dist(p + e.yxy) - scene_dist(p - e.yxy),
@@ -160,7 +160,10 @@ vec3 estimate_normal(vec3 p) {
 }
 
 vec3 sky(vec3 dir) {
-	return vec3(0.0);
+	float a = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+	vec3 horizon = vec3(0.020, 0.025, 0.040);
+	vec3 zenith  = vec3(0.002, 0.002, 0.005);
+	return settings.sky_intensity * mix(horizon, zenith, a);
 }
 
 // ---------------------------------------------------------------------------
@@ -171,10 +174,10 @@ Hit march(vec3 ro, vec3 rd) {
 	Hit h = Hit(false, vec3(0.0), vec3(0.0), Material(vec3(0.0), vec3(0.0)));
 
 	float t = 0.0;
-	for (int i = 0; i < MAX_MARCHING_STEPS && t < MAX_DISTANCE; ++i) {
+	for (int i = 0; i < settings.max_steps && t < settings.max_distance; ++i) {
 		vec3 p = ro + t * rd;
 		SceneSample s = scene(p);
-		if (s.dist < EPSILON) {
+		if (s.dist < settings.epsilon) {
 			h.hit = true;
 			h.pos = p;
 			h.normal = estimate_normal(p);
@@ -190,7 +193,7 @@ vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 	vec3 radiance = vec3(0.0);   // light collected so far
 	vec3 throughput = vec3(1.0); // how much of the light found later still reaches the camera
 
-	for (int bounce = 0; bounce < MAX_BOUNCES; ++bounce) {
+	for (int bounce = 0; bounce < settings.max_bounces; ++bounce) {
 		Hit h = march(ro, rd);
 
 		if (!h.hit) {
@@ -202,7 +205,7 @@ vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 		throughput *= h.mat.albedo;
 
 		// Start the next ray just off the surface, or it immediately "hits" again.
-		ro = h.pos + h.normal * (2.0 * EPSILON);
+		ro = h.pos + h.normal * (2.0 * settings.epsilon);
 
 		// Diffuse bounce. Guard against normal + random vector cancelling out.
 		vec3 dir = h.normal + random_unit_vector(rng);
@@ -243,10 +246,10 @@ void main() {
 	vec3 dir = basis * vec3(x, y, -d);
 
 	// Depth of field: the point this pixel sees on the focus plane...
-	vec3 focus_point = camera.pos.xyz + dir * (FOCUS_DISTANCE / d);
+	vec3 focus_point = camera.pos.xyz + dir * (camera.focal_length / d);
 
 	// ...is reached from a random point on the lens instead of the camera center.
-	vec2 lens = LENS_RADIUS * random_in_unit_disk(rng);
+	vec2 lens = camera.aperture * random_in_unit_disk(rng);
 	vec3 ray_o = camera.pos.xyz + lens.x * camera.u.xyz + lens.y * camera.v.xyz;
 	vec3 ray_d = normalize(focus_point - ray_o);
 

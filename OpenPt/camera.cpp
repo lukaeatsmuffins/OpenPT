@@ -47,6 +47,20 @@ namespace openpt {
     m_aspect_ratio = static_cast<double>(window_width) / static_cast<double>(window_height);
   }
 
+  auto Camera::draw_ui() -> bool {
+    bool changed = false;
+
+    if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+      changed |= ImGui::SliderFloat("Field of view", &m_vfov, 10.0f, 120.0f, "%.0f deg");
+      changed |= ImGui::SliderFloat("Aperture", &m_aperture, 0.0f, 0.2f, "%.3f");
+      changed |= ImGui::SliderFloat("Focal length", &m_focal_length, 0.1f, 10.0f, "%.2f");
+
+      ImGui::Text("Position: %.2f, %.2f, %.2f", m_vpos.x, m_vpos.y, m_vpos.z);
+    }
+
+    return changed;
+  }
+
   auto Camera::update_uniforms() noexcept -> void {
     CameraData camera_data{
       glm::vec4(m_vpos, 10.5f),
@@ -54,7 +68,9 @@ namespace openpt {
       glm::vec4(m_v, 0.0f),
       glm::vec4(m_w, 0.0f),
       m_vfov,
-      m_aspect_ratio
+      m_aspect_ratio,
+      m_aperture,
+      m_focal_length
     };
 
     glNamedBufferSubData(m_UBO, 0, sizeof(CameraData), &camera_data);

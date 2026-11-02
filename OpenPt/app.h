@@ -27,7 +27,8 @@ namespace openpt {
       m_delta_time(0.0f),
       first_mouse_event(true),
       last_x(0.0),
-      last_y(0.0) {
+      last_y(0.0),
+      m_imgui_mode_on(false) {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };
@@ -60,6 +61,7 @@ namespace openpt {
     bool first_mouse_event;
     double last_x;
     double last_y;
+    bool m_imgui_mode_on;
 
   private:
     auto create_window() -> void;
@@ -67,6 +69,7 @@ namespace openpt {
     auto init_imgui() -> void;
     auto setup_renderer() -> void;
     auto setup_camera() -> void;
+    auto draw_ui() -> void;
     auto loop() noexcept -> void;
     auto process_input() noexcept -> void;
     auto update_time() noexcept -> void;

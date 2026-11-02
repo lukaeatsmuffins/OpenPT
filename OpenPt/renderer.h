@@ -11,6 +11,22 @@ namespace openpt {
   class App;
   class Renderer {
   public:
+    struct alignas(16) RenderSettings {
+      alignas(16) glm::vec4 glow_color; // rgb used, w unused
+      float glow_start;
+      float glow_end;
+      float glow_intensity;
+      float sky_intensity;
+      float max_distance;
+      int max_bounces;
+      int max_steps;
+      float epsilon;
+      float bulb_power;
+      int bulb_iterations;
+      float bulb_bailout;
+    };
+
+
     Renderer(uint32_t window_width, uint32_t window_height) :
       m_VAO(0),
       m_VBO(0),
@@ -18,7 +34,28 @@ namespace openpt {
       m_window_width(window_width),
       m_window_height(window_height),
       m_frame_count(0),
-      m_sample_count(0) {}
+      m_sample_count(0),
+      m_exposure(1.0f) {
+      static_assert(offsetof(RenderSettings, glow_start) == 16);
+      static_assert(offsetof(RenderSettings, max_bounces) == 36);
+      static_assert(offsetof(RenderSettings, bulb_iterations) == 52);
+      static_assert(sizeof(RenderSettings) == 64);
+      m_settings = RenderSettings{
+        .glow_color     = { 1.0f, 0.55f, 0.2f, 0.0f },
+        .glow_start     = 0.55f,
+        .glow_end       = 0.80f,
+        .glow_intensity = 8.0f,
+        .sky_intensity  = 1.0f,
+        .max_distance   = 100.0f,
+        .max_bounces    = 8,
+        .max_steps      = 500,
+        .epsilon        = 0.001f,
+        .bulb_power     = 8.0f,
+        .bulb_iterations = 10,
+        .bulb_bailout   = 2.0f,
+      };
+      uint32_t m_settings_ubo{};
+    }
 
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
@@ -33,6 +70,8 @@ namespace openpt {
     auto get_window_size() const noexcept -> glm::vec2;
 
     auto setup() -> void;
+    
+    auto draw_ui() -> bool;
 
     auto reset_sample_counter() noexcept -> void;
 
@@ -40,6 +79,7 @@ namespace openpt {
     auto setup_display_shader() noexcept -> void;
     auto setup_display_buffers() -> void;
     auto setup_compute_shader() -> void;
+    auto setup_settings() -> void;
     auto check_shader_creation(uint32_t shdr) const -> void;
     auto check_program_creation(uint32_t program) const -> void;
     auto create_texture() noexcept -> void;
@@ -55,6 +95,9 @@ namespace openpt {
     uint32_t m_window_height;
     uint32_t m_frame_count;
     uint32_t m_sample_count;
+    uint32_t m_settings_ubo;
+    float m_exposure;
+    RenderSettings m_settings;
     static constexpr float m_display_vertices[] = {
        1.0f,  1.0f, 0.0f,  // top right
        1.0f, -1.0f, 0.0f,  // bottom right
@@ -81,7 +124,7 @@ namespace openpt {
       #version 460 core
       layout (binding = 0) uniform sampler2D tex;
 
-      #define EXPOSURE 4.0
+      layout (location = 0) uniform float exposure;
 
       in vec2 v_uv;
       out vec4 FragColor;
@@ -92,7 +135,7 @@ namespace openpt {
       }
 
       void main() {
-        vec3 hdr = texture(tex, v_uv).rgb * EXPOSURE;
+        vec3 hdr = texture(tex, v_uv).rgb * exposure;
         FragColor = vec4(pow(aces(hdr), vec3(1.0 / 2.2)), 1.0);
       }
       )";

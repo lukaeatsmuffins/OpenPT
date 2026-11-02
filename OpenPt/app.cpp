@@ -81,10 +81,46 @@ namespace openpt {
     m_camera.setup();
   }
 
+  auto App::draw_ui() -> void {
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    constexpr float panel_width = 300.0f;
+
+    // Pin to the right edge, full height, every frame (so window resizes are followed).
+    ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - panel_width,
+                                   viewport->WorkPos.y));
+    ImGui::SetNextWindowSize(ImVec2(panel_width, viewport->WorkSize.y));
+
+    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+                                       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+
+    ImGui::Begin("Settings", nullptr, flags);
+
+    bool changed = false;
+    changed |= m_camera.draw_ui();
+    changed |= m_renderer.draw_ui();
+
+    ImGui::End();
+
+    if (changed) {
+      m_renderer.reset_sample_counter();
+    }
+  }
+
   auto App::process_input() noexcept -> void {
     auto window = m_window.get();
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
       glfwSetWindowShouldClose(m_window.get(), true);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+      m_imgui_mode_on = !m_imgui_mode_on;
+      auto mode = m_imgui_mode_on ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
+      glfwSetInputMode(m_window.get(), GLFW_CURSOR, mode);  
+    }
+
+    if (m_imgui_mode_on) {
+      return;
     }
     
     glm::vec3 direction{0};
@@ -128,6 +164,12 @@ namespace openpt {
   }
 
   auto App::on_mouse_event(double xpos, double ypos) noexcept -> void {
+    
+    // Processing GUI input.
+    if (m_imgui_mode_on) {
+      first_mouse_event = true;
+      return;
+    }
 
     if (first_mouse_event) {
       last_x = xpos;
@@ -154,6 +196,9 @@ namespace openpt {
       ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
+      if (m_imgui_mode_on) {
+        draw_ui();
+      }
 
       update_time();
       process_input();

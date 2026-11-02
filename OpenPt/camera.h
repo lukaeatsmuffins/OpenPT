@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 namespace openpt {
   class Camera {
@@ -14,6 +17,8 @@ namespace openpt {
 
       float vfov;
       float aspect_ratio;
+      float aperture;
+      float focal_length;
     };
 
   public:
@@ -26,7 +31,9 @@ namespace openpt {
       m_last_frame(0),
       m_delta_time(0),
       m_yaw(-90.0f),
-      m_pitch(0.0f) {
+      m_pitch(0.0f),
+      m_aperture(0.1f),
+      m_focal_length(1.0f) {
       m_w = glm::normalize(-m_direction);
       m_u = glm::normalize(glm::cross(m_vup, m_w));
       m_v = glm::cross(m_w, m_u);
@@ -41,6 +48,7 @@ namespace openpt {
     auto rotate_camera(float x_offset, float y_offset) noexcept -> void;
     auto update_aspect_ratio(uint32_t window_width, uint32_t window_height) noexcept -> void;
     auto update_uniforms() noexcept -> void;
+    auto draw_ui() -> bool;
 
   private:
     auto update_direction(glm::vec3 direction) noexcept -> void;
@@ -62,6 +70,9 @@ namespace openpt {
 
     float m_yaw;
     float m_pitch;
+
+    float m_aperture;
+    float m_focal_length;
   };
 
 
