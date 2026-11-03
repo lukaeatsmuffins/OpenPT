@@ -8,17 +8,15 @@ namespace openpt {
   }
 
   auto Camera::move_camera(float delta_time, glm::vec3 direction) noexcept -> void {
-    constexpr float sensitivity = 0.1f;
-    const float camera_speed = sensitivity * delta_time;
+    const float camera_speed = m_speed * delta_time;
     m_vpos += camera_speed * direction.x * m_u ;
     m_vpos += camera_speed * direction.y * m_vup;
     m_vpos += camera_speed * direction.z * (glm::normalize(glm::vec3(m_w.x, 0.0f, m_w.z)));
   }
 
   auto Camera::rotate_camera(float x_offset, float y_offset) noexcept -> void {
-    constexpr float sensitivity = 0.1f;
-    m_yaw += x_offset * sensitivity;
-    m_pitch += y_offset * sensitivity;
+    m_yaw += x_offset * m_sensitivity;
+    m_pitch += y_offset * m_sensitivity;
 
     if (m_pitch > 89.0f) {
       m_pitch =  89.0f;
@@ -54,6 +52,10 @@ namespace openpt {
       changed |= ImGui::SliderFloat("Field of view", &m_vfov, 10.0f, 120.0f, "%.0f deg");
       changed |= ImGui::SliderFloat("Aperture", &m_aperture, 0.0f, 0.2f, "%.3f");
       changed |= ImGui::SliderFloat("Focus distance", &m_focus_distance, 0.1f, 10.0f, "%.2f");
+
+      // these do not affect the image.
+      ImGui::SliderFloat("Speed", &m_speed, 1.0f, 10.0f, "%.1f");
+      ImGui::SliderFloat("Sensitivity", &m_sensitivity, 0.01f, 0.5f, "%.3f");
 
       ImGui::Text("Position: %.2f, %.2f, %.2f", m_vpos.x, m_vpos.y, m_vpos.z);
     }
