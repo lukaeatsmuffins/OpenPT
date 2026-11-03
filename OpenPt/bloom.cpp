@@ -84,9 +84,12 @@ namespace openpt {
 
     uint32_t levels_until_0px = static_cast<std::uint32_t>(std::floor(std::log2(smaller_dim_size)) - 1);
 
-    uint32_t max_levels{ std::min(m_level_count, levels_until_0px) };
+    assert(m_settings.levels > 0);
+    m_level_count = std::min(static_cast<std::uint32_t>(m_settings.levels), levels_until_0px);
+
+    assert(m_level_count > 0);
     m_chain = gl::create_texture({
-        .levels = std::max(max_levels, 1u),
+        .levels = m_level_count,
         .format = GL_RGBA16F,
         .width = m_width / 2,
         .height = m_height / 2,
