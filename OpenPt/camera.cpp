@@ -9,6 +9,7 @@ namespace openpt {
 
   auto Camera::move_camera(float delta_time, glm::vec3 direction) noexcept -> void {
     const float camera_speed = m_speed * delta_time;
+    direction = glm::normalize(direction);
     m_vpos += camera_speed * direction.x * m_u ;
     m_vpos += camera_speed * direction.y * m_vup;
     m_vpos += camera_speed * direction.z * (glm::normalize(glm::vec3(m_w.x, 0.0f, m_w.z)));
@@ -54,7 +55,7 @@ namespace openpt {
       changed |= ImGui::SliderFloat("Focus distance", &m_focus_distance, 0.1f, 10.0f, "%.2f");
 
       // these do not affect the image.
-      ImGui::SliderFloat("Speed", &m_speed, 1.0f, 10.0f, "%.1f");
+      ImGui::SliderFloat("Speed", &m_speed, 0.1f, 10.0f, "%.1f");
       ImGui::SliderFloat("Sensitivity", &m_sensitivity, 0.01f, 0.5f, "%.3f");
 
       ImGui::Text("Position: %.2f, %.2f, %.2f", m_vpos.x, m_vpos.y, m_vpos.z);
