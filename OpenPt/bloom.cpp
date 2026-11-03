@@ -70,10 +70,13 @@ namespace openpt {
     if (ImGui::CollapsingHeader("Bloom", ImGuiTreeNodeFlags_DefaultOpen)) {
       ImGui::SliderFloat("Strength", &m_settings.strength, 0.01f, 0.1f, "%.2f");
       ImGui::SliderFloat("Filter Radius", &m_settings.filter_radius, 0.001f, 0.01f, "%.3f");
-      ImGui::SliderInt("Levels", &m_settings.levels, 1, 6);
+      if (ImGui::SliderInt("Levels", &m_settings.levels, 1, 6)) {
+        // recreate the chain.
+        resize(m_width, m_height);
+      }
     }
 
-    // Bloom doesn't need to reset the samples as it is PostFX.
+    // bloom doesn't need to reset the samples as it is PostFX.
     return false;
   }
 
@@ -118,7 +121,7 @@ namespace openpt {
       glProgramUniform1i(m_downsample_program, 0, first ? 0 : static_cast<GLint>(i - 1));
       glProgramUniform1i(m_downsample_program, 1, first ? 1 : 0);
 
-      glBindImageTexture(0, m_chain, static_cast<GLint>(i), GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+      glBindImageTexture(0, m_chain, static_cast<GLint>(i), GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA16F);
 
       // one thread per pixel of the destination level (chain level 0 is half the image size).
       const std::uint32_t w = std::max(1u, (m_width / 2) >> i);
@@ -140,7 +143,7 @@ namespace openpt {
       glProgramUniform1i(m_upsample_program, 0, static_cast<GLint>(i));
       glProgramUniform1f(m_upsample_program, 1, m_settings.filter_radius);
 
-      glBindImageTexture(0, m_chain, static_cast<GLint>(i-1), GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+      glBindImageTexture(0, m_chain, static_cast<GLint>(i-1), GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 
       const std::uint32_t w = std::max(1u, (m_width / 2) >> (i-1));
       const std::uint32_t h = std::max(1u, (m_height / 2) >> (i-1));

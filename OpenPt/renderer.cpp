@@ -133,10 +133,11 @@ namespace openpt {
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     m_bloom.apply(m_texture);
+    auto bloom_texture = m_bloom.output_texture();
 
     glBindVertexArray(m_VAO);
     glUseProgram(m_program);
-    glBindTextureUnit(0, m_texture);
+    glBindTextureUnit(0, bloom_texture);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
   }
