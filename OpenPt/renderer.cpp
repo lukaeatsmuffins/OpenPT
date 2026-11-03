@@ -57,14 +57,22 @@ namespace openpt {
       changed |= ImGui::SliderInt("Iterations", &m_settings.bulb_iterations, 1, 20);
     }
 
+    changed |= m_bloom.draw_ui();
+
     return changed;
   }
 
   auto Renderer::create_texture() noexcept -> void {
-    glCreateTextures(GL_TEXTURE_2D, 1, &m_texture);
-    glTextureStorage2D(m_texture, 1, GL_RGBA32F, m_window_width, m_window_height);
-    glTextureParameteri(m_texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(m_texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    m_texture = shader::create_texture({
+        .levels = 1,
+        .format = GL_RGBA32F,
+        .width = m_window_width,
+        .height = m_window_height,
+        .min_filter = GL_NEAREST,
+        .mag_filter = GL_NEAREST,
+        .wrap_s = GL_CLAMP_TO_EDGE,
+        .wrap_t = GL_CLAMP_TO_EDGE
+      });
 
     constexpr float black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, black);
@@ -130,71 +138,32 @@ namespace openpt {
     const char* vshdr_src = m_display_vshdr;
     glShaderSource(vshdr, 1, &vshdr_src, NULL);
     glCompileShader(vshdr);
-    check_shader_creation(vshdr);
+    shader::check_shader_creation(vshdr);
 
     uint32_t fshdr = glCreateShader(GL_FRAGMENT_SHADER);
     const char* fshdr_src = m_display_fshdr;
     glShaderSource(fshdr, 1, &fshdr_src, NULL);
     glCompileShader(fshdr);
-    check_shader_creation(fshdr);
+    shader::check_shader_creation(fshdr);
 
     m_program = glCreateProgram();
     glAttachShader(m_program, vshdr);
     glAttachShader(m_program, fshdr);
     glLinkProgram(m_program);
-    check_program_creation(m_program);
+    shader::check_program_creation(m_program);
 
     glDeleteShader(vshdr);
     glDeleteShader(fshdr);
   }
 
   auto Renderer::setup_compute_shader() -> void {
-    uint32_t shdr = glCreateShader(GL_COMPUTE_SHADER);
-    std::string src_str = shader::read_shader(m_comp_shdr_path);
-    const char* src = src_str.c_str();
-    glShaderSource(shdr, 1, &src, NULL);
-    glCompileShader(shdr);
-    check_shader_creation(shdr);
-
-    m_compute_program = glCreateProgram();
-    glAttachShader(m_compute_program, shdr);
-    glLinkProgram(m_compute_program);
-    check_program_creation(m_compute_program);
-
-    glDeleteShader(shdr);
-
+    m_compute_program = shader::create_compute_shader(m_comp_shdr_path);
   }
 
   auto Renderer::setup_settings() -> void {
     glCreateBuffers(1, &m_settings_ubo);
     glNamedBufferStorage(m_settings_ubo, sizeof(RenderSettings), nullptr, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_settings_ubo);
-  }
-
-  auto Renderer::check_shader_creation(uint32_t shdr) const -> void {
-    constexpr size_t infolog_size = 512;
-    char infolog[infolog_size];
-    int success{ 0 };
-
-    glGetShaderiv(shdr, GL_COMPILE_STATUS, &success);
-    if (!success) {
-      glGetShaderInfoLog(shdr, infolog_size, nullptr, infolog);
-      throw std::runtime_error(std::format(
-        "RENDERER: Shader compilation failed\n{}\n", infolog));
-    }
-  }
-
-  auto Renderer::check_program_creation(uint32_t program) const -> void {
-    constexpr size_t infolog_size = 512;
-    char infolog[infolog_size];
-    int success{ 0 };
-
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-      glGetProgramInfoLog(program, infolog_size, nullptr, infolog);
-      throw std::runtime_error(std::format(
-        "RENDERER: Shader program linking failed\n{}\n", infolog));
-    }
   }
 
   auto Renderer::get_window_size() const noexcept -> glm::vec2 {

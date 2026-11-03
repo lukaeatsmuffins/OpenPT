@@ -1,7 +1,11 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <bloom.h>
+
 #include <glm/glm.hpp>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include <cstdint>
 #include <memory>
@@ -37,7 +41,8 @@ namespace openpt {
       m_frame_count(0),
       m_sample_count(0),
       m_settings_ubo(0),
-      m_exposure(1.0f) {
+      m_exposure(1.0f),
+      m_bloom(window_width, window_height) {
       static_assert(offsetof(RenderSettings, glow_start) == 16);
       static_assert(offsetof(RenderSettings, max_bounces) == 36);
       static_assert(offsetof(RenderSettings, bulb_iterations) == 52);
@@ -81,8 +86,6 @@ namespace openpt {
     auto setup_display_buffers() -> void;
     auto setup_compute_shader() -> void;
     auto setup_settings() -> void;
-    auto check_shader_creation(uint32_t shdr) const -> void;
-    auto check_program_creation(uint32_t program) const -> void;
     auto create_texture() noexcept -> void;
     auto update_counters() noexcept -> void;
 
@@ -99,6 +102,7 @@ namespace openpt {
     uint32_t m_settings_ubo;
     float m_exposure;
     RenderSettings m_settings;
+    Bloom m_bloom;
     static constexpr float m_display_vertices[] = {
        1.0f,  1.0f, 0.0f,  // top right
        1.0f, -1.0f, 0.0f,  // bottom right
