@@ -22,7 +22,7 @@ namespace openpt {
  
     auto resize(std::uint32_t width, std::uint32_t height) noexcept -> void;
  
-    auto apply(std::uint32_t source) noexcept -> void;
+    auto apply(std::uint32_t source_tex) noexcept -> void;
  
     [[nodiscard]] auto output_texture() const noexcept -> std::uint32_t;
     [[nodiscard]] auto strength() const noexcept -> float;

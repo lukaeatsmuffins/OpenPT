@@ -46,13 +46,15 @@ namespace openpt {
     create_chain();
   }
  
-  auto Bloom::apply(std::uint32_t source) noexcept -> void {
+  auto Bloom::apply(std::uint32_t source_tex) noexcept -> void {
     if (m_width < min_dim_size || m_height < min_dim_size) {
       return;
     }
 
-    downsample_pass(source);
+    downsample_pass(source_tex);
     upsample_pass();
+
+    glBindSampler(0, 0);
   }
  
   auto Bloom::output_texture() const noexcept -> std::uint32_t {
@@ -106,23 +108,46 @@ namespace openpt {
   }
  
   auto Bloom::downsample_pass(std::uint32_t source) noexcept -> void {
-    // Use the downsample program; bind m_sampler to unit 0.
-    // Pass 0: read `source` (level 0)    -> write chain level 0, with the Karis average (uniform flag).
-    // Pass i: read chain level i - 1     -> write chain level i.
-    // Each pass: bind the read texture to unit 0, set the source-level uniform,
-    // glBindImageTexture(0, m_chain, i, ..., GL_WRITE_ONLY, GL_RGBA16F),
-    // dispatch over the *destination* level's size (rounded up to 8x8 groups),
-    // then glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT) so the next pass can sample it.
-  }
- 
+    glUseProgram(m_downsample_program);
+    glBindSampler(0, m_sampler);
+
+    for (std::uint32_t i = 0; i < m_level_count; ++i) {
+      const bool first = (i == 0);
+
+      glBindTextureUnit(0, first ? source : m_chain);
+      glProgramUniform1i(m_downsample_program, 0, first ? 0 : static_cast<GLint>(i - 1));
+      glProgramUniform1i(m_downsample_program, 1, first ? 1 : 0);
+
+      glBindImageTexture(0, m_chain, static_cast<GLint>(i), GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+      // one thread per pixel of the destination level (chain level 0 is half the image size).
+      const std::uint32_t w = std::max(1u, (m_width / 2) >> i);
+      const std::uint32_t h = std::max(1u, (m_height / 2) >> i);
+      glDispatchCompute((w + 7) / 8, (h + 7) / 8, 1);
+
+      glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
+    }
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  } 
+
   auto Bloom::upsample_pass() noexcept -> void {
-    // Use the upsample program; set the filter radius uniform.
-    // From the smallest level up: read chain level i + 1 (sampled, tent filter)
-    // and add it into level i: glBindImageTexture(..., level i, GL_READ_WRITE, ...),
-    // imageLoad + imageStore in the shader.
-    // Dispatch over level i's size; barrier with
-    // GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT between passes.
+    glUseProgram(m_upsample_program);
+    glBindSampler(0, m_sampler);
+
+    for (std::uint32_t i = m_level_count - 1; i > 0; --i) {
+
+      glBindTextureUnit(0, m_chain);
+      glProgramUniform1i(m_upsample_program, 0, static_cast<GLint>(i));
+      glProgramUniform1f(m_upsample_program, 1, m_settings.filter_radius);
+
+      glBindImageTexture(0, m_chain, static_cast<GLint>(i-1), GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+      const std::uint32_t w = std::max(1u, (m_width / 2) >> (i-1));
+      const std::uint32_t h = std::max(1u, (m_height / 2) >> (i-1));
+      glDispatchCompute((w + 7) / 8, (h + 7) / 8, 1);
+
+      glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT | GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    }
   }
- 
 } // openpt
  

@@ -2,7 +2,7 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 layout(binding = 0) uniform sampler2D srcTexture;
-layout(rgba32f, binding = 0) uniform image2D outLayer;
+layout(rgba16f, binding = 0) uniform image2D outLayer;
 
 layout(location = 0) uniform int srcLevel;
 layout(location = 1) uniform float filterRadius;
