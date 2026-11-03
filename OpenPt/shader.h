@@ -2,9 +2,10 @@
 #define SHADER_H
 
 #include <string>
+#include <cstdint>
 
 namespace openpt {
-  namespace shader {
+  namespace gl {
     struct TextureParams {
       uint32_t levels;
       uint32_t format;

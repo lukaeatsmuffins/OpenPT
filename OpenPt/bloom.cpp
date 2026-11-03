@@ -7,8 +7,6 @@
 #include <cmath>
 #include <stdexcept>
 
-#define MIN_DIM_SIZE 8
- 
 namespace openpt {
  
   Bloom::Bloom(std::uint32_t width, std::uint32_t height) :
@@ -23,7 +21,7 @@ namespace openpt {
   }
  
   auto Bloom::setup() -> void {
-    m_sampler = shader::create_sampler({
+    m_sampler = gl::create_sampler({
         .min_filter = GL_LINEAR_MIPMAP_NEAREST,
         .mag_filter = GL_LINEAR,
         .wrap_s = GL_CLAMP_TO_EDGE,
@@ -32,15 +30,15 @@ namespace openpt {
 
     create_chain();
 
-    m_downsample_program = shader::create_compute_shader(m_dwnsmpl_shdr_path);
-    m_upsample_program = shader::create_compute_shader(m_upsmpl_shdr_path);
+    m_downsample_program = gl::create_compute_shader(m_dwnsmpl_shdr_path);
+    m_upsample_program = gl::create_compute_shader(m_upsmpl_shdr_path);
   }
  
   auto Bloom::resize(std::uint32_t width, std::uint32_t height) noexcept -> void {
     m_width = width;
     m_height = height;
 
-    if (width < MIN_DIM_SIZE || height < MIN_DIM_SIZE) {
+    if (width < min_dim_size || height < min_dim_size) {
       return;
     }
 
@@ -49,7 +47,7 @@ namespace openpt {
   }
  
   auto Bloom::apply(std::uint32_t source) noexcept -> void {
-    if (m_width < MIN_DIM_SIZE || m_height < MIN_DIM_SIZE) {
+    if (m_width < min_dim_size || m_height < min_dim_size) {
       return;
     }
 
@@ -66,32 +64,30 @@ namespace openpt {
   }
  
   auto Bloom::draw_ui() -> bool {
-    // CollapsingHeader("Bloom"): strength, filter radius, levels.
-    // Changing levels means recreating the chain.
-    bool changed = false;
 
     if (ImGui::CollapsingHeader("Bloom", ImGuiTreeNodeFlags_DefaultOpen)) {
-      changed |= ImGui::SliderFloat("Strength", &m_settings.strength, 0.01f, 0.1f, "%.2f");
-      changed |= ImGui::SliderFloat("Filter Radius", &m_settings.filter_radius, 0.001f, 0.01f, "%.3f");
-      changed |= ImGui::SliderInt("Levels", &m_settings.levels, 1, 6);
+      ImGui::SliderFloat("Strength", &m_settings.strength, 0.01f, 0.1f, "%.2f");
+      ImGui::SliderFloat("Filter Radius", &m_settings.filter_radius, 0.001f, 0.01f, "%.3f");
+      ImGui::SliderInt("Levels", &m_settings.levels, 1, 6);
     }
 
-    return changed;
+    // Bloom doesn't need to reset the samples as it is PostFX.
+    return false;
   }
 
   auto Bloom::create_chain() -> void {
     auto smaller_dim_size = std::min(m_width, m_height);
 
-    if (smaller_dim_size < MIN_DIM_SIZE) {
+    if (smaller_dim_size < min_dim_size) {
       throw std::runtime_error("BLOOM: Image is too small to create a mipmap chain.");
     }
 
     uint32_t levels_until_0px = static_cast<std::uint32_t>(std::floor(std::log2(smaller_dim_size)) - 1);
 
     uint32_t max_levels{ std::min(m_level_count, levels_until_0px) };
-    m_chain = shader::create_texture({
+    m_chain = gl::create_texture({
         .levels = std::max(max_levels, 1u),
-        .format = GL_RGBA32F,
+        .format = GL_RGBA16F,
         .width = m_width / 2,
         .height = m_height / 2,
         .min_filter = GL_LINEAR_MIPMAP_NEAREST,

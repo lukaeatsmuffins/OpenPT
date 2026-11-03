@@ -9,7 +9,7 @@
 #include <format>
 
 namespace openpt {
-  namespace shader {
+  namespace gl {
     auto read_shader(const char* path) -> std::string {
       std::string code;
       std::ifstream file;
@@ -37,7 +37,7 @@ namespace openpt {
       if (!success) {
         glGetShaderInfoLog(shdr, infolog_size, nullptr, infolog);
         throw std::runtime_error(std::format(
-          "RENDERER: Shader compilation failed\n{}\n", infolog));
+          "SHADER: Shader compilation failed\n{}\n", infolog));
       }
     }
 
@@ -50,22 +50,22 @@ namespace openpt {
       if (!success) {
         glGetProgramInfoLog(program, infolog_size, nullptr, infolog);
         throw std::runtime_error(std::format(
-          "RENDERER: Shader program linking failed\n{}\n", infolog));
+          "SHADER: Shader program linking failed\n{}\n", infolog));
       }
     }
 
     auto create_compute_shader(const char* path) -> uint32_t {
       auto shdr = glCreateShader(GL_COMPUTE_SHADER);
-      std::string src_str = shader::read_shader(path);
+      std::string src_str = gl::read_shader(path);
       const char* src = src_str.c_str();
       glShaderSource(shdr, 1, &src, NULL);
       glCompileShader(shdr);
-      shader::check_shader_creation(shdr);
+      check_shader_creation(shdr);
 
       auto program = glCreateProgram();
       glAttachShader(program, shdr);
       glLinkProgram(program);
-      shader::check_program_creation(program);
+      check_program_creation(program);
 
       glDeleteShader(shdr);
 

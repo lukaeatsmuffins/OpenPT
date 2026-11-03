@@ -47,6 +47,8 @@ namespace openpt {
 
     static constexpr char m_dwnsmpl_shdr_path[] = SHADER_DIR "downsample.glsl";
     static constexpr char m_upsmpl_shdr_path[] = SHADER_DIR "upsample.glsl";
+
+    static constexpr std::uint32_t min_dim_size = 8;
  
     Settings m_settings{};
   };

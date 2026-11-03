@@ -23,6 +23,7 @@ namespace openpt {
       setup_display_shader();
       setup_compute_shader();
       setup_settings();
+      setup_postfx();
   }
 
   auto Renderer::draw_ui() -> bool {
@@ -63,7 +64,7 @@ namespace openpt {
   }
 
   auto Renderer::create_texture() noexcept -> void {
-    m_texture = shader::create_texture({
+    m_texture = gl::create_texture({
         .levels = 1,
         .format = GL_RGBA32F,
         .width = m_window_width,
@@ -78,7 +79,7 @@ namespace openpt {
     glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, black);
   }
 
-  auto Renderer::update_window (uint32_t window_width, uint32_t window_height) noexcept -> void {
+  auto Renderer::update_window(uint32_t window_width, uint32_t window_height) noexcept -> void {
     m_window_width = window_width;
     m_window_height = window_height;
 
@@ -89,6 +90,11 @@ namespace openpt {
 
     glDeleteTextures(1, &m_texture);
     create_texture();
+    update_postfx();
+  }
+
+  auto Renderer::update_postfx() noexcept -> void {
+    m_bloom.resize(m_window_width, m_window_height);
   }
 
   auto Renderer::setup_display_buffers() -> void {
@@ -126,6 +132,8 @@ namespace openpt {
     glDispatchCompute(std::ceil(m_window_width / 8.0f), std::ceil(m_window_height / 8.0f), 1);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
+    m_bloom.apply(m_texture);
+
     glBindVertexArray(m_VAO);
     glUseProgram(m_program);
     glBindTextureUnit(0, m_texture);
@@ -138,32 +146,36 @@ namespace openpt {
     const char* vshdr_src = m_display_vshdr;
     glShaderSource(vshdr, 1, &vshdr_src, NULL);
     glCompileShader(vshdr);
-    shader::check_shader_creation(vshdr);
+    gl::check_shader_creation(vshdr);
 
     uint32_t fshdr = glCreateShader(GL_FRAGMENT_SHADER);
     const char* fshdr_src = m_display_fshdr;
     glShaderSource(fshdr, 1, &fshdr_src, NULL);
     glCompileShader(fshdr);
-    shader::check_shader_creation(fshdr);
+    gl::check_shader_creation(fshdr);
 
     m_program = glCreateProgram();
     glAttachShader(m_program, vshdr);
     glAttachShader(m_program, fshdr);
     glLinkProgram(m_program);
-    shader::check_program_creation(m_program);
+    gl::check_program_creation(m_program);
 
     glDeleteShader(vshdr);
     glDeleteShader(fshdr);
   }
 
   auto Renderer::setup_compute_shader() -> void {
-    m_compute_program = shader::create_compute_shader(m_comp_shdr_path);
+    m_compute_program = gl::create_compute_shader(m_comp_shdr_path);
   }
 
   auto Renderer::setup_settings() -> void {
     glCreateBuffers(1, &m_settings_ubo);
     glNamedBufferStorage(m_settings_ubo, sizeof(RenderSettings), nullptr, GL_DYNAMIC_STORAGE_BIT);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_settings_ubo);
+  }
+
+  auto Renderer::setup_postfx() -> void {
+    m_bloom.setup();
   }
 
   auto Renderer::get_window_size() const noexcept -> glm::vec2 {

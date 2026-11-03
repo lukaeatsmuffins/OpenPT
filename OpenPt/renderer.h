@@ -88,6 +88,8 @@ namespace openpt {
     auto setup_settings() -> void;
     auto create_texture() noexcept -> void;
     auto update_counters() noexcept -> void;
+    auto setup_postfx() -> void;
+    auto update_postfx() noexcept -> void;
 
   private:
     uint32_t m_VAO;
