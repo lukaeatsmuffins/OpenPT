@@ -129,9 +129,11 @@ namespace openpt {
     static constexpr char m_display_fshdr[] =
       R"(
       #version 460 core
-      layout (binding = 0) uniform sampler2D tex;
+      layout (binding = 0) uniform sampler2D scene;
+      layout (binding = 1) uniform sampler2D bloom;
 
       layout (location = 0) uniform float exposure;
+      layout (location = 1) uniform float bloomStrength;
 
       in vec2 v_uv;
       out vec4 FragColor;
@@ -142,7 +144,9 @@ namespace openpt {
       }
 
       void main() {
-        vec3 hdr = texture(tex, v_uv).rgb * exposure;
+        vec3 s = texture(scene, v_uv).rgb;
+        vec3 b = textureLod(bloom, v_uv, 0.0).rgb;
+        vec3 hdr = mix(s, b, bloomStrength) * exposure;
         FragColor = vec4(pow(aces(hdr), vec3(1.0 / 2.2)), 1.0);
       }
       )";
