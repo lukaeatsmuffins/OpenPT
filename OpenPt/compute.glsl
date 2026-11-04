@@ -27,6 +27,7 @@ layout (std140, binding = 1) uniform Settings {
 	float bulb_power;
 	int bulb_iterations;
 	float bulb_bailout;
+	float headlight_intensity;
 } settings;
 
 layout(location = 0) uniform uint u_frame;
@@ -35,6 +36,8 @@ layout(location = 1) uniform uint u_sample_count;
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
+
+const float INV_PI = 0.31830988618;
 
 struct Material {
 	vec3 albedo;
@@ -164,6 +167,32 @@ Hit march(vec3 ro, vec3 rd) {
 	return h; // ran out of steps or distance: miss
 }
 
+bool occluded(vec3 ro, vec3 rd, float max_t) {
+	float t = 4.0 * settings.epsilon;
+	for (int i = 0; i < settings.max_steps && t < max_t; ++i) {
+		float d = scene_dist(ro + t * rd);
+		if (d < settings.epsilon) {
+			return true;
+		}
+		t += d;
+	}
+	return false;
+}
+
+vec3 headlight(vec3 pos, vec3 normal) {
+	vec3 light_pos = camera.pos.xyz + camera.v.xyz * 0.05;
+	vec3 to_light = light_pos - pos;
+	float dist2 = max(dot(to_light, to_light), 1e-4); // no blow-up right next to the light
+	float dist = sqrt(dist2);
+	vec3 l = to_light / dist;
+
+	float cos_theta = dot(normal, l);
+	if (cos_theta <= 0.0 || occluded(pos + normal * (2.0 * settings.epsilon), l, dist)) {
+		return vec3(0.0);
+	}
+	return vec3(settings.headlight_intensity) * cos_theta / dist2; // inverse-square falloff
+}
+
 vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 	vec3 radiance = vec3(0.0);   // light collected so far
 	vec3 throughput = vec3(1.0); // how much of the light found later still reaches the camera
@@ -177,6 +206,11 @@ vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 		}
 
 		radiance += throughput * h.mat.emission;
+
+		if (settings.headlight_intensity > 0.0) {
+			radiance += throughput * h.mat.albedo * INV_PI * headlight(h.pos, h.normal);
+		}
+
 		throughput *= h.mat.albedo;
 
 		// Start the next ray just off the surface, or it immediately "hits" again.

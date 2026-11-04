@@ -35,6 +35,8 @@ namespace openpt {
       changed |= ImGui::SliderFloat("Surface epsilon", &m_settings.epsilon, 0.00001f, 0.01f, "%.5f",
                                     ImGuiSliderFlags_Logarithmic);
       changed |= ImGui::SliderFloat("Sky intensity", &m_settings.sky_intensity, 0.0f, 5.0f);
+      changed |= ImGui::SliderFloat("Headlight", &m_settings.headlight_intensity, 0.0f, 100.0f, "%.2f",
+                              ImGuiSliderFlags_Logarithmic);
 
       // Display-only: applied after accumulation, so no reset needed.
       ImGui::SliderFloat("Exposure", &m_exposure, 0.1f, 10.0f, "%.2f", ImGuiSliderFlags_Logarithmic);

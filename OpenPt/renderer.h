@@ -29,6 +29,7 @@ namespace openpt {
       float bulb_power;
       int bulb_iterations;
       float bulb_bailout;
+      float headlight_intensity;
     };
 
 
@@ -47,6 +48,7 @@ namespace openpt {
       static_assert(offsetof(RenderSettings, glow_start) == 16);
       static_assert(offsetof(RenderSettings, max_bounces) == 36);
       static_assert(offsetof(RenderSettings, bulb_iterations) == 52);
+      static_assert(offsetof(RenderSettings, headlight_intensity) == 60);
       static_assert(sizeof(RenderSettings) == 64);
       m_settings = RenderSettings{
         .glow_color     = { 1.0f, 0.55f, 0.2f, 0.0f },
