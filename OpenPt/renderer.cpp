@@ -97,6 +97,17 @@ namespace openpt {
     m_bloom.resize(m_window_width, m_window_height);
   }
 
+  auto Renderer::read_screen() const -> std::vector<std::uint8_t> {
+    std::vector<std::uint8_t> pixels(std::size_t{ m_window_width } * m_window_height * 3);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // rows are 3 * width bytes, not padded to 4
+    glReadPixels(0, 0, m_window_width, m_window_height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+    return pixels;
+  }
+
+  auto Renderer::get_dims() const noexcept -> std::pair<uint32_t, uint32_t>{
+    return { m_window_width, m_window_height };
+  }
+
   auto Renderer::setup_display_buffers() -> void {
     // create a data buffer.
     glCreateBuffers(1, &m_VBO);

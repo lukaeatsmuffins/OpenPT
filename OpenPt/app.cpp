@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include <app.h>
 
 namespace openpt {
@@ -107,6 +105,10 @@ namespace openpt {
     changed |= m_camera.draw_ui();
     changed |= m_renderer.draw_ui();
 
+    if (ImGui::Button("Screenshot")) {
+      m_screenshot_requested = true;
+    }
+
     ImGui::End();
 
     if (changed) {
@@ -171,6 +173,19 @@ namespace openpt {
 		m_last_frame = current_frame;  
   }
 
+  auto App::maybe_screenshot() noexcept -> void {
+    if (m_screenshot_requested) {
+      m_screenshot_requested = false;
+      const auto [w, h] = m_renderer.get_dims();
+      // todo: maybe display on the UI.
+      if (auto result = io::write_png(m_renderer.read_screen(), w, h, "screenshots")) {
+        std::println("Saved {}", result->string());
+      } else {
+        std::println(stderr, "Screenshot failed: {}", result.error());
+      }
+    }
+  }
+
   auto App::on_mouse_event(double xpos, double ypos) noexcept -> void {
     
     // Processing GUI input.
@@ -213,6 +228,8 @@ namespace openpt {
 
       m_camera.update_uniforms();
       m_renderer.display_render();
+
+      maybe_screenshot();
 
       ImGui::Render();
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

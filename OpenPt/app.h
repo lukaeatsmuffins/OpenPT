@@ -4,6 +4,7 @@
 #include <window.h>
 #include <renderer.h>
 #include <camera.h>
+#include <image_io.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -28,7 +29,8 @@ namespace openpt {
       first_mouse_event(true),
       last_x(0.0),
       last_y(0.0),
-      m_imgui_mode_on(false) {
+      m_imgui_mode_on(false),
+      m_screenshot_requested(false) {
       if (!glfwInit()) {
         throw std::runtime_error("APP: Failed to initialize GLFW");
       };
@@ -64,6 +66,7 @@ namespace openpt {
     double last_x;
     double last_y;
     bool m_imgui_mode_on;
+    bool m_screenshot_requested;
 
   private:
     auto create_window() -> void;
@@ -75,6 +78,7 @@ namespace openpt {
     auto loop() noexcept -> void;
     auto process_input() noexcept -> void;
     auto update_time() noexcept -> void;
+    auto maybe_screenshot() noexcept -> void;
 	};
 } // openpt
 

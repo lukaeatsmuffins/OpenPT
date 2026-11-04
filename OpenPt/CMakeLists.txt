@@ -30,3 +30,4 @@ target_sources(OpenPt PRIVATE
   ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 target_include_directories(OpenPt PRIVATE ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+target_include_directories(OpenPt PRIVATE external/stb)

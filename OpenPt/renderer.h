@@ -81,6 +81,10 @@ namespace openpt {
 
     auto reset_sample_counter() noexcept -> void;
 
+    auto read_screen() const -> std::vector <uint8_t>;
+
+    auto get_dims() const noexcept -> std::pair<uint32_t, uint32_t>;
+
   private:
     auto setup_display_shader() noexcept -> void;
     auto setup_display_buffers() -> void;
