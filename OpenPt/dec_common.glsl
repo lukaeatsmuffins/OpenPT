@@ -26,3 +26,7 @@ mat3 rotate3D(float angle, vec3 axis) {
         a.z * a.z * r + c
     );
 }
+
+// Many entries are written for twigl/Shadertoy, where `time` is the animation clock.
+// Frozen here: an animated scene would break sample accumulation.
+const float time = 0.0;
