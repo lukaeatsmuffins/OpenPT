@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <format>
+#include <vector>
 
 namespace openpt {
   namespace gl {
@@ -55,20 +56,37 @@ namespace openpt {
     }
 
     auto create_compute_shader(const char* path) -> uint32_t {
-      auto shdr = glCreateShader(GL_COMPUTE_SHADER);
-      std::string src_str = gl::read_shader(path);
-      const char* src = src_str.c_str();
-      glShaderSource(shdr, 1, &src, NULL);
-      glCompileShader(shdr);
-      check_shader_creation(shdr);
+        return create_compute_program({ read_shader(path) });
+    }
 
-      auto program = glCreateProgram();
-      glAttachShader(program, shdr);
+    auto create_compute_program(std::initializer_list<std::string_view> sources) -> std::uint32_t {
+      std::vector<const char*> ptrs;
+      std::vector<GLint> lengths;
+      for (const auto s : sources) {
+        ptrs.push_back(s.data());
+        lengths.push_back(static_cast<GLint>(s.size()));
+      }
+
+      const GLuint shader = glCreateShader(GL_COMPUTE_SHADER);
+      glShaderSource(shader, static_cast<GLsizei>(ptrs.size()), ptrs.data(), lengths.data());
+      glCompileShader(shader);
+      try {
+        check_shader_creation(shader);
+      } catch (...) {
+        glDeleteShader(shader);
+        throw;
+      }
+
+      const GLuint program = glCreateProgram();
+      glAttachShader(program, shader);
       glLinkProgram(program);
-      check_program_creation(program);
-
-      glDeleteShader(shdr);
-
+      glDeleteShader(shader);
+      try {
+        check_program_creation(program);
+      } catch (...) {
+        glDeleteProgram(program);
+        throw;
+      }
       return program;
     }
 

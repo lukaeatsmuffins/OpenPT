@@ -21,9 +21,9 @@ namespace openpt {
   auto Renderer::setup() -> void {
       setup_display_buffers();
       setup_display_shader();
-      setup_compute_shader();
       setup_settings();
       setup_postfx();
+      scan_fractals();
   }
 
   auto Renderer::draw_ui() -> bool {
@@ -56,6 +56,26 @@ namespace openpt {
     if (ImGui::CollapsingHeader("Fractal", ImGuiTreeNodeFlags_DefaultOpen)) {
       changed |= ImGui::SliderFloat("Power", &m_settings.bulb_power, 2.0f, 16.0f, "%.2f");
       changed |= ImGui::SliderInt("Iterations", &m_settings.bulb_iterations, 1, 20);
+      if (m_fractal_names.empty()) {
+        ImGui::TextUnformatted("No fractals found");
+      } else if (ImGui::BeginCombo("Fractal##select",
+                                   m_fractal_names[m_fractal_index].c_str(),
+                                   ImGuiComboFlags_HeightLarge)) {
+        for (int i = 0; i < std::ssize(m_fractal_names); ++i) {
+          const bool selected = (i == m_fractal_index);
+          if (ImGui::Selectable(m_fractal_names[i].c_str(), selected) && !selected) {
+            if (load_fractal(m_fractal_names[i])) {
+              m_fractal_index = i;
+              changed = true;
+            }
+          }
+          if (selected) {
+            ImGui::SetItemDefaultFocus();
+          }
+        }
+        ImGui::EndCombo();
+      }
+
     }
 
     changed |= m_bloom.draw_ui();
@@ -178,10 +198,6 @@ namespace openpt {
     glDeleteShader(fshdr);
   }
 
-  auto Renderer::setup_compute_shader() -> void {
-    m_compute_program = gl::create_compute_shader(m_comp_shdr_path);
-  }
-
   auto Renderer::setup_settings() -> void {
     glCreateBuffers(1, &m_settings_ubo);
     glNamedBufferStorage(m_settings_ubo, sizeof(RenderSettings), nullptr, GL_DYNAMIC_STORAGE_BIT);
@@ -206,4 +222,35 @@ namespace openpt {
     m_sample_count = 0;
   }
 
+  auto Renderer::scan_fractals() -> void {
+    m_fractal_names.clear();
+    for (const auto& entry : std::filesystem::directory_iterator(m_fractal_dir)) {
+      if (entry.is_regular_file() && entry.path().extension() == ".glsl") {
+        m_fractal_names.push_back(entry.path().stem().string());
+      }
+    }
+
+    std::ranges::sort(m_fractal_names, {}, [](const std::string& s) { return std::pair{ s.size(), s }; });
+    if (m_fractal_names.empty() || !load_fractal(m_fractal_names[m_fractal_index])) {
+      throw std::runtime_error("RENDERER: no fractal could be loaded");
+    }
+  }
+  
+  auto Renderer::load_fractal(const std::string& name) -> bool {
+    try {
+      const std::string main_src    = gl::read_shader(m_comp_shdr_path);
+      const std::string common_src  = gl::read_shader(m_common_path);
+      const std::string fractal_src = gl::read_shader((m_fractal_dir / (name + ".glsl")).string().c_str());
+
+      const GLuint program = gl::create_compute_program({ main_src, common_src, "#line 1\n", fractal_src });
+
+      glDeleteProgram(m_compute_program);
+      m_compute_program = program;
+      reset_sample_counter();
+      return true;
+    } catch (const std::exception& e) {
+      std::println(stderr, "Fractal '{}' failed: {}", name, e.what());
+      return false;
+    }
+  }
 } //openpt

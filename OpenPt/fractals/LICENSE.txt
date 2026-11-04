@@ -1,0 +1,4 @@
+The .glsl files in this folder are entries from the Distance Estimator Compendium (DEC),
+https://jbaker.graphics/writings/DEC.html
+Each file names its original author. They are distributed under
+CC BY-NC-SA 3.0 (https://creativecommons.org/licenses/by-nc-sa/3.0/)

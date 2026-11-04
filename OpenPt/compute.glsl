@@ -87,33 +87,26 @@ vec2 random_in_unit_disk(inout uint state) {
 // Scene
 // ---------------------------------------------------------------------------
 
-float sdMandelbulb(vec3 p, out float trap) {
-	vec3 z = p;
-	float dr = 1.0; // running derivative of |z|
-	float r = length(z);
-	trap = r;
 
-	for (int i = 0; i < settings.bulb_iterations; ++i) {
-		r = length(z);
-		if (r > settings.bulb_bailout) {
-			break;
-		}
-		trap = min(trap, r);
+float de(vec3);
 
-		// z = z^power + p, with z^power done in spherical coordinates:
-		// radius to the power, both angles times the power.
-		float theta = acos(clamp(z.z / r, -1.0, 1.0));
-		float phi = atan(z.y, z.x);
-		dr = settings.bulb_power * pow(r, settings.bulb_power - 1.0) * dr + 1.0;
+vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
+	return a + b * cos(6.28318530718 * (c * t + d));
+}
 
-		float zr = pow(r, settings.bulb_power);
-		theta *= settings.bulb_power;
-		phi *= settings.bulb_power;
+float g_trap;
 
-		z = zr * vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)) + p;
-	}
+SceneSample scene(vec3 p) {
+	g_trap = 1e9;            // default: no trap information
+	float dist = de(p);
 
-	return 0.5 * log(r) * r / dr;
+	float t = clamp(pow(g_trap, 2.0), 0.0, 1.0);
+	vec3 albedo = 0.8 * palette(t, vec3(0.5, 0.35, 0.2), vec3(0.5, 0.35, 0.2), vec3(1.0), vec3(0.0, 0.05, 0.1));
+
+	float glow = 1.0 - smoothstep(settings.glow_start, settings.glow_end, g_trap);
+	vec3 emission = settings.glow_color.rgb * settings.glow_intensity * glow;
+
+	return SceneSample(dist, Material(albedo, emission));
 }
 
 float sdSphere(vec3 p, float r) {
@@ -128,24 +121,6 @@ SceneSample opUnion(SceneSample a, SceneSample b) {
 	return b;
 }
 
-vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
-	return a + b * cos(6.28318530718 * (c * t + d));
-}
-
-SceneSample scene(vec3 p) {
-	float trap;
-
-	float dist = sdMandelbulb(p.xzy, trap);
-	
-	float t = clamp(pow(trap, 2.0), 0.0, 1.0);
-
-	vec3 albedo = 0.8 * palette(t, vec3(0.5, 0.35, 0.2), vec3(0.5, 0.35, 0.2), vec3(1.0), vec3(0.0, 0.05, 0.1));
-
-	float glow = 1.0 - smoothstep(settings.glow_start, settings.glow_end, trap);
-	vec3 emission = settings.glow_color.rgb * settings.glow_intensity * glow;
-
-	return SceneSample(dist, Material(albedo, emission));
-}
 
 float scene_dist(vec3 p) {
 	return scene(p).dist;

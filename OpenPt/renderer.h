@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <filesystem>
 
 
 namespace openpt {
@@ -88,12 +89,13 @@ namespace openpt {
   private:
     auto setup_display_shader() noexcept -> void;
     auto setup_display_buffers() -> void;
-    auto setup_compute_shader() -> void;
     auto setup_settings() -> void;
     auto create_texture() noexcept -> void;
     auto update_counters() noexcept -> void;
     auto setup_postfx() -> void;
     auto update_postfx() noexcept -> void;
+    auto scan_fractals() -> void;
+    auto load_fractal(const std::string& name) -> bool;
 
   private:
     uint32_t m_VAO;
@@ -109,6 +111,11 @@ namespace openpt {
     float m_exposure;
     RenderSettings m_settings;
     Bloom m_bloom;
+
+    std::filesystem::path m_fractal_dir{ SHADER_DIR "fractals" };
+    std::vector<std::string> m_fractal_names;
+    int m_fractal_index{ 0 };
+
     static constexpr float m_display_vertices[] = {
        1.0f,  1.0f, 0.0f,  // top right
        1.0f, -1.0f, 0.0f,  // bottom right
@@ -155,6 +162,7 @@ namespace openpt {
       }
       )";
     static constexpr char m_comp_shdr_path[] = SHADER_DIR "compute.glsl";
+    static constexpr char m_common_path[] = SHADER_DIR "dec_common.glsl";
   };
 
 } // openpt

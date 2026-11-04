@@ -68,7 +68,7 @@ namespace openpt {
     return changed;
   }
 
-  auto Camera::update_uniforms() noexcept -> void {
+  auto Camera::update_uniforms() const noexcept -> void {
     CameraData camera_data{
       glm::vec4(m_vpos, 10.5f),
       glm::vec4(m_u, 0.0f),
