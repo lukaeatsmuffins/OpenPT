@@ -37,6 +37,7 @@ namespace openpt {
       glGetShaderiv(shdr, GL_COMPILE_STATUS, &success);
       if (!success) {
         glGetShaderInfoLog(shdr, infolog_size, nullptr, infolog);
+        glDeleteShader(shdr);
         throw std::runtime_error(std::format(
           "SHADER: Shader compilation failed\n{}\n", infolog));
       }
@@ -70,12 +71,7 @@ namespace openpt {
       const GLuint shader = glCreateShader(GL_COMPUTE_SHADER);
       glShaderSource(shader, static_cast<GLsizei>(ptrs.size()), ptrs.data(), lengths.data());
       glCompileShader(shader);
-      try {
-        check_shader_creation(shader);
-      } catch (...) {
-        glDeleteShader(shader);
-        throw;
-      }
+      check_shader_creation(shader);
 
       const GLuint program = glCreateProgram();
       glAttachShader(program, shader);
