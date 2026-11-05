@@ -1,6 +1,7 @@
 #version 460 core
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D screen;
+layout(binding = 0) uniform sampler2D sky_img;
 
 layout (std140, binding = 0) uniform Camera {
 	vec4 pos;
@@ -38,6 +39,8 @@ layout(location = 1) uniform uint u_sample_count;
 // ---------------------------------------------------------------------------
 
 const float INV_PI = 0.31830988618;
+const float M_PI = 3.141592653589793;
+const float PI   = 3.141592653589793;
 
 struct Material {
 	vec3 albedo;
@@ -138,10 +141,10 @@ vec3 estimate_normal(vec3 p) {
 }
 
 vec3 sky(vec3 dir) {
-	float a = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
-	vec3 horizon = vec3(0.020, 0.025, 0.040);
-	vec3 zenith  = vec3(0.002, 0.002, 0.005);
-	return settings.sky_intensity * mix(horizon, zenith, a);
+	dir = normalize(dir);
+	float u = 0.5 + atan(dir.z, dir.x)/(2.0 * M_PI);
+	float v = acos(dir.y)/M_PI;
+	return textureLod(sky_img, vec2(u, v), 0.0).rgb * settings.sky_intensity;
 }
 
 // ---------------------------------------------------------------------------

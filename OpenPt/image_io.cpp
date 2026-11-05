@@ -2,7 +2,9 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image_write.h>
+#include <stb_image.h>
 
 #include <chrono>
 #include <format>
@@ -44,5 +46,22 @@ namespace openpt::io {
     }
 
     return path;
+  }
+
+  auto read_png(const std::filesystem::path& path, bool flip_vertically)
+    -> std::expected<std::pair<std::vector<float>, glm::uvec3>, std::string> {
+    stbi_set_flip_vertically_on_load(flip_vertically);
+    int tex_width, tex_height, n_channels;
+    float *data = stbi_loadf(path.string().c_str(), &tex_width, &tex_height, &n_channels, 4); 
+    if (!data) {
+      return std::unexpected(std::format("stbi_load failed for '{}'", path.string()));
+    }
+
+    glm::uvec3 size {static_cast<uint32_t>(tex_width), static_cast<uint32_t>(tex_height), static_cast<uint32_t>(n_channels)};
+    std::vector<float> im_data(data, data + tex_width * tex_height * 4);
+
+    stbi_image_free(data);
+
+    return std::make_pair(im_data, size);
   }
 } // namespace openpt::io

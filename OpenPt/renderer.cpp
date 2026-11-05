@@ -17,12 +17,16 @@ namespace openpt {
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteTextures(1, &m_texture);
     glDeleteBuffers(1, &m_settings_ubo);
+    if (m_sky_texture) {
+      glDeleteTextures(1, &m_sky_texture);
+    }
   }
 
   auto Renderer::setup() -> void {
       setup_display_buffers();
       setup_display_shader();
       setup_settings();
+      setup_skybox();
       setup_postfx();
       scan_fractals();
   }
@@ -102,6 +106,32 @@ namespace openpt {
     glClearTexImage(m_texture, 0, GL_RGBA, GL_FLOAT, black);
   }
 
+  auto Renderer::setup_skybox() -> void {
+
+    auto res = io::read_png(m_skybox_path, false);
+    if (!res) {
+      throw std::runtime_error("Failed to load skybox: " + res.error());
+    }
+
+    auto skybox_data = res.value();
+    
+    m_sky_texture = gl::create_texture({
+      .levels = 1,
+      .format = GL_RGBA32F,
+      .width = res.value().second.x,
+      .height = res.value().second.y,
+      .min_filter = GL_LINEAR,
+      .mag_filter = GL_LINEAR,
+      .wrap_s = GL_REPEAT,
+      .wrap_t = GL_CLAMP_TO_EDGE
+      });
+
+    const auto& sbox_data = skybox_data.first;
+    const auto& sbox_dims = skybox_data.second;
+
+    glTextureSubImage2D(m_sky_texture, 0, 0, 0, sbox_dims.x, sbox_dims.y, GL_RGBA, GL_FLOAT, sbox_data.data());
+  }
+
   auto Renderer::update_window(uint32_t window_width, uint32_t window_height) noexcept -> void {
     m_window_width = window_width;
     m_window_height = window_height;
@@ -159,7 +189,12 @@ namespace openpt {
     update_counters();
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // image to render.
     glBindImageTexture(0, m_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+    // skybox.
+    glBindTextureUnit(0, m_sky_texture);
+
     glUseProgram(m_compute_program);
     glNamedBufferSubData(m_settings_ubo, 0, sizeof(RenderSettings), &m_settings);
     glProgramUniform1f(m_program, 0, m_exposure);

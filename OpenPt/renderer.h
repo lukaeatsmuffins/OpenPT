@@ -44,7 +44,8 @@ namespace openpt {
       m_sample_count(0),
       m_settings_ubo(0),
       m_exposure(1.0f),
-      m_bloom(window_width, window_height) {
+      m_bloom(window_width, window_height),
+      m_sky_texture(0) {
       static_assert(offsetof(RenderSettings, glow_start) == 16);
       static_assert(offsetof(RenderSettings, max_bounces) == 36);
       static_assert(offsetof(RenderSettings, bulb_iterations) == 52);
@@ -93,6 +94,7 @@ namespace openpt {
     auto setup_display_buffers() -> void;
     auto setup_settings() -> void;
     auto create_texture() noexcept -> void;
+    auto setup_skybox() -> void;
     auto update_counters() -> void;
     auto setup_postfx() -> void;
     auto update_postfx() noexcept -> void;
@@ -113,8 +115,10 @@ namespace openpt {
     float m_exposure;
     RenderSettings m_settings;
     Bloom m_bloom;
+    uint32_t m_sky_texture;
 
     std::filesystem::path m_fractal_dir{ SHADER_DIR "fractals" };
+    std::filesystem::path m_skybox_path{ SHADER_DIR "skybox.hdr" };
     std::vector<std::string> m_fractal_names;
     int m_fractal_index{ 0 };
 

@@ -2,9 +2,6 @@
 // rotate2D / rotate3D / PI are from the twigl header the DEC site links
 // (https://jbaker.graphics/resources/noise.glsl, MIT license); M_PI is the usual constant.
 
-const float PI   = 3.141592653589793;
-const float M_PI = 3.141592653589793;
-
 mat2 rotate2D(float r) {
     return mat2(cos(r), sin(r), -sin(r), cos(r));
 }
