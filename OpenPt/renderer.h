@@ -102,7 +102,7 @@ namespace openpt {
   private:
     uint32_t m_VAO;
     uint32_t m_VBO;
-    uint32_t m_texture;
+    uint32_t m_texture{};
     uint32_t m_program;
     uint32_t m_compute_program;
     uint32_t m_window_width;

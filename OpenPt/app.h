@@ -21,7 +21,7 @@ namespace openpt {
   public: 
 
     App(int window_width, int window_height, const char* app_title):
-      m_window_title(app_title),
+      m_platform(window_width, window_height, app_title),
       m_renderer(window_width, window_height),
       m_camera(static_cast<double>(window_width)/static_cast<double>(window_height), 45.0),
       m_last_frame(0.0f),
@@ -31,20 +31,11 @@ namespace openpt {
       last_y(0.0),
       m_imgui_mode_on(false),
       m_screenshot_requested(false) {
-      if (!glfwInit()) {
-        throw std::runtime_error("APP: Failed to initialize GLFW");
-      };
-      // TODO: setup GLFW error callback.
+      setup_callbacks();
     }
 
-    ~App() {
-      // TODO: this is not going to work due to lifetimes.
-      // fix this later.
-      ImGui_ImplOpenGL3_Shutdown();
-      ImGui_ImplGlfw_Shutdown();
-      ImGui::DestroyContext();
-      glfwTerminate();
-    }
+    App(const App&) = delete;
+    App& operator=(const App&) = delete;
 
     void run();
 
@@ -55,9 +46,24 @@ namespace openpt {
     auto change_gui_mode() noexcept -> void;
 
   private:
-    const char* m_window_title{};
+    // Owns GLFW, the window (+ GL context) and ImGui. Members are in setup order,
+    // so they're destroyed in reverse: ImGui -> window -> GLFW.
+    class Platform {
+    public:
+      Platform(int width, int height, const char* title) :
+        m_window(glfw::create_window(width, height, title)),
+        m_imgui(m_window.get()) {}
 
-    glfw::Window m_window{};
+      [[nodiscard]] auto window() const noexcept -> GLFWwindow* { return m_window.get(); }
+
+    private:
+      glfw::Context   m_glfw;
+      glfw::Window    m_window;
+      imgui::Context  m_imgui;
+    };
+
+    // Declared first: everything below needs the window and GL.
+    Platform m_platform;
     Renderer m_renderer;
     Camera m_camera;
     float m_last_frame;
@@ -69,9 +75,7 @@ namespace openpt {
     bool m_screenshot_requested;
 
   private:
-    auto create_window() -> void;
-    auto init_opengl() const -> void;
-    auto init_imgui() -> void;
+    auto setup_callbacks() -> void;
     auto setup_renderer() -> void;
     auto setup_camera() -> void;
     auto draw_ui() -> void;

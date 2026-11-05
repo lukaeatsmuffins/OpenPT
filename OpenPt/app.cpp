@@ -2,12 +2,6 @@
 
 namespace openpt {
   namespace {
-    auto APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id,
-                                    GLenum severity, GLsizei length,
-                                    const GLchar* message, const void* user_param) noexcept -> void {
-        std::println(stderr, "GL: {}", message);
-    }
-
     auto framebuffer_resize_cb(GLFWwindow* window, int width, int height) noexcept -> void {
       glViewport(0, 0, width, height);
       auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
@@ -33,50 +27,21 @@ namespace openpt {
   }
 
   auto App::run() -> void{
-    create_window();
-    init_opengl();
-    init_imgui();
     setup_renderer();
     setup_camera();
     loop();
   }
 
-  void App::create_window() {
-    glm::vec2 window_size = m_renderer.get_window_size();
-    m_window = glfw::create_window(window_size.x, window_size.y, m_window_title);
-    glfwMakeContextCurrent(m_window.get());
-  }
+  auto App::setup_callbacks() -> void {
+    GLFWwindow* window = m_platform.window();
+    glfwSetWindowUserPointer(window, (void*) this);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_event_cb);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_resize_cb);
 
-  void App::init_opengl() const {
-    assert(m_window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-      throw std::runtime_error("GLAD: Failed to initialize.");
-    }
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(gl_debug_callback, nullptr);
-
-    glm::vec2 window_size = m_renderer.get_window_size();
-    glViewport(0, 0, window_size.x, window_size.y);
-    glfwSetWindowUserPointer(m_window.get(), (void*) this);
-    glfwSetInputMode(m_window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
-    glfwSetCursorPosCallback(m_window.get(), mouse_event_cb);  
-    glfwSetKeyCallback(m_window.get(), key_callback);
-    glfwSetFramebufferSizeCallback(m_window.get(), framebuffer_resize_cb);
-  }
-
-  void App::init_imgui() {
-    assert(m_window);
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-    ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
-    ImGui_ImplOpenGL3_Init("#version 460");
+    // set up ImGui callbacks after our own so we do not overwrite them.
+    ImGui_ImplGlfw_InstallCallbacks(window);
   }
 
   auto App::setup_renderer() -> void {
@@ -91,7 +56,6 @@ namespace openpt {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     constexpr float panel_width = 300.0f;
 
-    // Pin to the right edge, full height, every frame (so window resizes are followed).
     ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + viewport->WorkSize.x - panel_width,
                                    viewport->WorkPos.y));
     ImGui::SetNextWindowSize(ImVec2(panel_width, viewport->WorkSize.y));
@@ -119,14 +83,14 @@ namespace openpt {
   auto App::change_gui_mode() noexcept -> void {
     m_imgui_mode_on = !m_imgui_mode_on;
     auto mode = m_imgui_mode_on ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
-    glfwSetInputMode(m_window.get(), GLFW_CURSOR, mode);  
+    glfwSetInputMode(m_platform.window(), GLFW_CURSOR, mode);  
   }
 
   auto App::process_input() noexcept -> void {
-    auto window = m_window.get();
+    auto window = m_platform.window();
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-      glfwSetWindowShouldClose(m_window.get(), true);
+      glfwSetWindowShouldClose(window, true);
     }
 
     if (m_imgui_mode_on) {
@@ -215,7 +179,7 @@ namespace openpt {
   }
 
   void App::loop() noexcept {
-    while (!glfwWindowShouldClose(m_window.get())) {
+    while (!glfwWindowShouldClose(m_platform.window())) {
       ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
@@ -234,7 +198,7 @@ namespace openpt {
       ImGui::Render();
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-      glfwSwapBuffers(m_window.get());
+      glfwSwapBuffers(m_platform.window());
       glfwPollEvents();
     }
   }

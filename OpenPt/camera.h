@@ -56,7 +56,7 @@ namespace openpt {
     auto update_direction(glm::vec3 direction) noexcept -> void;
 
   private:
-    uint32_t m_UBO;
+    uint32_t m_UBO{};
     float m_aspect_ratio;
     float m_vfov;
     glm::vec3 m_vpos;
