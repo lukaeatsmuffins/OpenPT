@@ -199,7 +199,11 @@ vec3 headlight(vec3 pos, vec3 normal) {
 	if (cos_theta <= 0.0 || occluded(pos + normal * (2.0 * settings.epsilon), l, dist)) {
 		return vec3(0.0);
 	}
-	return vec3(settings.headlight_intensity) * cos_theta / dist2; // inverse-square falloff
+	float fog_factor = 1;
+	if (settings.fog_enabled != 0) {
+		fog_factor = exp(-settings.fog_density * dist);
+	}
+	return fog_factor * vec3(settings.headlight_intensity) * cos_theta / dist2; // inverse-square falloff
 }
 
 vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
@@ -210,6 +214,7 @@ vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 		Hit h = march(ro, rd);
 
 		if (settings.fog_enabled != 0) {
+			// todo: equiangular sampling.
 			float r = rand(rng);
 			float s = -1/settings.fog_density * log(r);
 			if (s < h.t) {
