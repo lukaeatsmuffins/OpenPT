@@ -17,7 +17,7 @@ namespace openpt {
   class Renderer {
   public:
     struct alignas(16) RenderSettings {
-      alignas(16) glm::vec4 glow_color; // rgb used, w unused
+      alignas(16) glm::vec4 glow_color;
       float glow_start;
       float glow_end;
       float glow_intensity;
@@ -30,6 +30,9 @@ namespace openpt {
       int bulb_iterations;
       float bulb_bailout;
       float headlight_intensity;
+      alignas(16) glm::vec4 fog_albedo;
+      float fog_density;
+      int fog_enabled;
     };
 
 
@@ -50,7 +53,10 @@ namespace openpt {
       static_assert(offsetof(RenderSettings, max_bounces) == 36);
       static_assert(offsetof(RenderSettings, bulb_iterations) == 52);
       static_assert(offsetof(RenderSettings, headlight_intensity) == 60);
-      static_assert(sizeof(RenderSettings) == 64);
+      static_assert(offsetof(RenderSettings, fog_albedo) == 64);
+      static_assert(offsetof(RenderSettings, fog_density) == 80);
+      static_assert(offsetof(RenderSettings, fog_enabled) == 84);
+      static_assert(sizeof(RenderSettings) == 96);
       m_settings = RenderSettings{
         .glow_color     = { 1.0f, 0.55f, 0.2f, 0.0f },
         .glow_start     = 0.55f,
@@ -64,6 +70,9 @@ namespace openpt {
         .bulb_power     = 8.0f,
         .bulb_iterations = 10,
         .bulb_bailout   = 2.0f,
+        .fog_albedo     = { 0.8f, 0.8f, 0.8f, 0.0f },
+        .fog_density    = 0.05f,
+        .fog_enabled    = 0,
       };
     }
 
@@ -118,7 +127,7 @@ namespace openpt {
     uint32_t m_sky_texture;
 
     std::filesystem::path m_fractal_dir{ SHADER_DIR "fractals" };
-    std::filesystem::path m_skybox_path{ SHADER_DIR "skybox.hdr" };
+    std::filesystem::path m_skybox_path{ SHADER_DIR "skybox_overcast.hdr" };
     std::vector<std::string> m_fractal_names;
     int m_fractal_index{ 0 };
 

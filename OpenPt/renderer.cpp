@@ -60,6 +60,17 @@ namespace openpt {
       m_settings.glow_end = std::max(m_settings.glow_end, m_settings.glow_start + 0.001f);
     }
 
+    if (ImGui::CollapsingHeader("Fog", ImGuiTreeNodeFlags_DefaultOpen)) {
+      bool fog_enabled = m_settings.fog_enabled != 0;
+      if (ImGui::Checkbox("Enabled##fog", &fog_enabled)) {
+        m_settings.fog_enabled = fog_enabled ? 1 : 0;
+        changed = true;
+      }
+      changed |= ImGui::SliderFloat("Density", &m_settings.fog_density, 0.001f, 1.0f, "%.3f",
+                                    ImGuiSliderFlags_Logarithmic);
+      changed |= ImGui::ColorEdit3("Fog albedo", &m_settings.fog_albedo.x);
+    }
+
     if (ImGui::CollapsingHeader("Fractal", ImGuiTreeNodeFlags_DefaultOpen)) {
       changed |= ImGui::SliderFloat("Power", &m_settings.bulb_power, 2.0f, 16.0f, "%.2f");
       changed |= ImGui::SliderInt("Iterations", &m_settings.bulb_iterations, 1, 20);

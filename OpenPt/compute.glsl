@@ -29,6 +29,9 @@ layout (std140, binding = 1) uniform Settings {
 	int bulb_iterations;
 	float bulb_bailout;
 	float headlight_intensity;
+	vec4 fog_albedo;
+	float fog_density;
+	int fog_enabled;
 } settings;
 
 layout(location = 0) uniform uint u_frame;
@@ -54,6 +57,7 @@ struct SceneSample {
 
 struct Hit {
 	bool hit;
+	float t;
 	vec3 pos;
 	vec3 normal;
 	Material mat;
@@ -152,7 +156,7 @@ vec3 sky(vec3 dir) {
 // ---------------------------------------------------------------------------
 
 Hit march(vec3 ro, vec3 rd) {
-	Hit h = Hit(false, vec3(0.0), vec3(0.0), Material(vec3(0.0), vec3(0.0)));
+	Hit h = Hit(false, 0.0, vec3(0.0), vec3(0.0), Material(vec3(0.0), vec3(0.0)));
 
 	float t = 0.0;
 	for (int i = 0; i < settings.max_steps && t < settings.max_distance; ++i) {
@@ -160,6 +164,7 @@ Hit march(vec3 ro, vec3 rd) {
 		SceneSample s = scene(p);
 		if (s.dist < settings.epsilon) {
 			h.hit = true;
+			h.t = t;
 			h.pos = p;
 			h.normal = estimate_normal(p);
 			h.mat = s.mat;
@@ -167,6 +172,7 @@ Hit march(vec3 ro, vec3 rd) {
 		}
 		t += s.dist;
 	}
+	h.t = t;
 	return h; // ran out of steps or distance: miss
 }
 
@@ -202,6 +208,18 @@ vec3 trace(vec3 ro, vec3 rd, inout uint rng) {
 
 	for (int bounce = 0; bounce < settings.max_bounces; ++bounce) {
 		Hit h = march(ro, rd);
+
+		if (settings.fog_enabled != 0) {
+			float r = rand(rng);
+			float s = -1/settings.fog_density * log(r);
+			if (s < h.t) {
+				// scatter in fog, we wouldn't reach the object.
+				h.pos = ro + s * rd;
+				h.mat = Material(settings.fog_albedo.rgb, vec3(0.0));
+				h.normal = random_unit_vector(rng);
+				h.hit = true;
+			}
+		}
 
 		if (!h.hit) {
 			radiance += throughput * sky(rd);
