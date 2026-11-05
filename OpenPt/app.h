@@ -79,10 +79,10 @@ namespace openpt {
     auto setup_renderer() -> void;
     auto setup_camera() -> void;
     auto draw_ui() -> void;
-    auto loop() noexcept -> void;
+    auto loop() -> void;
     auto process_input() noexcept -> void;
     auto update_time() noexcept -> void;
-    auto maybe_screenshot() noexcept -> void;
+    auto maybe_screenshot() -> void;
 	};
 } // openpt
 

@@ -4,6 +4,7 @@
 
 #include <glad/glad.h>
 
+#include <algorithm>
 #include <stdexcept>
 #include <format>
 
@@ -148,7 +149,7 @@ namespace openpt {
     create_texture();
   }
 
-  auto Renderer::display_render() noexcept -> void {
+  auto Renderer::display_render() -> void {
 
     // nothing to render to, exit.
     if (m_window_height * m_window_width == 0) {
@@ -177,7 +178,7 @@ namespace openpt {
     glDrawArrays(GL_TRIANGLES, 0, 6);
   }
 
-  auto Renderer::setup_display_shader() noexcept -> void {
+  auto Renderer::setup_display_shader() -> void {
     uint32_t vshdr = glCreateShader(GL_VERTEX_SHADER);
     const char* vshdr_src = m_display_vshdr;
     glShaderSource(vshdr, 1, &vshdr_src, NULL);
@@ -214,7 +215,7 @@ namespace openpt {
     return glm::vec2(m_window_width, m_window_height);
   }
   
-  auto Renderer::update_counters() noexcept -> void {
+  auto Renderer::update_counters() -> void {
     glProgramUniform1ui(m_compute_program, 0, m_frame_count++);
     glProgramUniform1ui(m_compute_program, 1, m_sample_count++);
     glfwSetWindowTitle(glfwGetCurrentContext(), std::format("OpenPT - Frame: {} Sample: {}", m_frame_count, m_sample_count).c_str());

@@ -42,6 +42,7 @@ namespace openpt {
       return;
     }
 
+    // create_chain() only throws for sizes below min_dim_size, which the check above rules out.
     destroy_chain();
     create_chain();
   }

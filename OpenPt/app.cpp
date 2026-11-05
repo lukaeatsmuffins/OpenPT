@@ -13,7 +13,7 @@ namespace openpt {
       app->on_mouse_event(xpos, ypos);
     }
 
-    auto key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
+    auto key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) noexcept -> void {
       if (key == GLFW_KEY_G && action == GLFW_PRESS) {
         auto* app = static_cast<App*>(glfwGetWindowUserPointer(window));
         app->change_gui_mode();
@@ -137,7 +137,7 @@ namespace openpt {
 		m_last_frame = current_frame;  
   }
 
-  auto App::maybe_screenshot() noexcept -> void {
+  auto App::maybe_screenshot() -> void {
     if (m_screenshot_requested) {
       m_screenshot_requested = false;
       const auto [w, h] = m_renderer.get_dims();
@@ -178,7 +178,7 @@ namespace openpt {
     }
   }
 
-  void App::loop() noexcept {
+  void App::loop() {
     while (!glfwWindowShouldClose(m_platform.window())) {
       ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplGlfw_NewFrame();

@@ -7,6 +7,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <cstddef>
+
 namespace openpt {
   class Camera {
     struct alignas(16) CameraData {
@@ -20,6 +22,12 @@ namespace openpt {
       float aperture;
       float focus_distance;
     };
+
+    // Must match the std140 layout of the Camera block in compute.glsl.
+    static_assert(offsetof(CameraData, u) == 16);
+    static_assert(offsetof(CameraData, vfov) == 64);
+    static_assert(offsetof(CameraData, focus_distance) == 76);
+    static_assert(sizeof(CameraData) == 80);
 
   public:
     Camera(float aspect_ratio, float vfov) :

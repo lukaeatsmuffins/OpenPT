@@ -90,7 +90,7 @@ namespace openpt {
       return program;
     }
 
-    auto create_texture(const TextureParams& params) -> uint32_t {
+    auto create_texture(const TextureParams& params) noexcept -> uint32_t {
       uint32_t tex{};
       glCreateTextures(GL_TEXTURE_2D, 1, &tex);
       glTextureStorage2D(tex, params.levels, params.format, params.width, params.height);
@@ -101,7 +101,7 @@ namespace openpt {
       return tex;
     }
 
-    auto create_sampler(const SamplerParams& params) -> uint32_t {
+    auto create_sampler(const SamplerParams& params) noexcept -> uint32_t {
       uint32_t sampler{};
       glCreateSamplers(1, &sampler);
       glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, params.min_filter);

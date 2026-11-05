@@ -72,7 +72,7 @@ namespace openpt {
     ~Renderer();
 
     // displays the rendered image on a rectangle.
-    auto display_render() noexcept -> void;
+    auto display_render() -> void;
 
     auto update_window(uint32_t window_width, uint32_t window_height) noexcept -> void;
 
@@ -89,11 +89,11 @@ namespace openpt {
     auto get_dims() const noexcept -> std::pair<uint32_t, uint32_t>;
 
   private:
-    auto setup_display_shader() noexcept -> void;
+    auto setup_display_shader() -> void;
     auto setup_display_buffers() -> void;
     auto setup_settings() -> void;
     auto create_texture() noexcept -> void;
-    auto update_counters() noexcept -> void;
+    auto update_counters() -> void;
     auto setup_postfx() -> void;
     auto update_postfx() noexcept -> void;
     auto scan_fractals() -> void;

@@ -29,8 +29,8 @@ namespace openpt {
     auto check_program_creation(uint32_t program) -> void;
     auto create_compute_shader(const char* path) -> uint32_t;
     auto create_compute_program(std::initializer_list<std::string_view> sources) -> std::uint32_t;
-    auto create_texture(const TextureParams& params) -> uint32_t;
-    auto create_sampler(const SamplerParams& params) -> uint32_t;
+    auto create_texture(const TextureParams& params) noexcept -> uint32_t;
+    auto create_sampler(const SamplerParams& params) noexcept -> uint32_t;
   } // shader
 } // openpt
 
